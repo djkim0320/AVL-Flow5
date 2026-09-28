@@ -1,3 +1,5 @@
+> 2026-09-21 기록이다. 이후 화면은 데스크톱 전용으로 재설계됐고(`body{min-width:1180px}`), Python 서버 코드는 `src/dbf_studio/`로 옮겼다. 아래 파일 위치·줄 번호와 좁은 화면 검사 결과는 당시 기준이다. 현재 구조는 [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)를 본다.
+
 # 배치 편집기 UI 검토 · 2026-09-21
 
 범위는 `ui/index.html`, `app.js`, `style.css`와 로컬 서버의 업로드·프로젝트 저장이다. Three.js 0.180.0, 표준 HTML 폼, CSS 의미 토큰을 사용한다. 사용자 AGENTS 지침을 적용했으며 이 프로젝트 내부에서 별도 AGENTS.md는 발견하지 않았다. 기존 비행 해석의 정확도 검토는 포함하지 않는다.

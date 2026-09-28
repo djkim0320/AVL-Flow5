@@ -11,10 +11,11 @@ dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2", "PyYAML>=6", "plotly>
 
 [project.optional-dependencies]
 contact = ["pybullet==3.2.7", "cadquery>=2.8", "numba==0.66.0"]
-dev = ["pytest>=8", "nbformat>=5", "nbclient>=0.10", "ipykernel>=6", "nbconvert>=7", "jupyterlab>=4"]
+dev = ["pytest>=8", "ruff>=0.16", "nbformat>=5", "nbclient>=0.10", "ipykernel>=6", "nbconvert>=7", "jupyterlab>=4"]
 
 [project.scripts]
 dbf = "dbf_stability.cli:main"
+dbf-studio = "dbf_studio.launch:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -22,3 +23,12 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["avl: requires the real AVL executable", "slow: numerical integration checks"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["ui/design", "test_models", "notebooks", "outputs", "vendor"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+line-ending = "lf"

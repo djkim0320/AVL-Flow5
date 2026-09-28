@@ -1,10 +1,11 @@
 """Model-independent CPU budget; solver processes inherit the parent affinity."""
+
 import ctypes
 import os
 
 
 def worker_limit(cpu_count=None):
-    return min(12, max(1, int(cpu_count or os.cpu_count() or 1)-4))
+    return min(12, max(1, int(cpu_count or os.cpu_count() or 1) - 4))
 
 
 def apply_affinity():
@@ -18,6 +19,6 @@ def apply_affinity():
             raise ctypes.WinError(ctypes.get_last_error())
     elif hasattr(os, 'sched_getaffinity'):
         allowed = sorted(os.sched_getaffinity(0))
-        used = allowed[:min(len(allowed), len(used))]
+        used = allowed[: min(len(allowed), len(used))]
         os.sched_setaffinity(0, used)
     return dict(logical_processors=used, reserved_logical_processors=[i for i in range(available) if i not in used])

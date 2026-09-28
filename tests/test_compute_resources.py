@@ -1,4 +1,5 @@
 """Exercise real Windows process affinity and the shared CAD worker ceiling."""
+
 import ctypes
 import multiprocessing as mp
 import os
@@ -15,12 +16,19 @@ HERE = Path(__file__).resolve().parents[1] / 'test_models' / 'H1_reference'
 def _worker_probe(messages, release):
     sys.path.insert(0, str(HERE))
     from compute_resources import acquire_worker
+
     acquire_worker()
     kernel = ctypes.WinDLL('kernel32', use_last_error=True)
     kernel.GetCurrentProcess.restype = ctypes.c_void_p
-    kernel.GetProcessAffinityMask.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(ctypes.c_size_t)]
+    kernel.GetProcessAffinityMask.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_size_t),
+        ctypes.POINTER(ctypes.c_size_t),
+    ]
     process_mask, system_mask = ctypes.c_size_t(), ctypes.c_size_t()
-    if not kernel.GetProcessAffinityMask(kernel.GetCurrentProcess(), ctypes.byref(process_mask), ctypes.byref(system_mask)):
+    if not kernel.GetProcessAffinityMask(
+        kernel.GetCurrentProcess(), ctypes.byref(process_mask), ctypes.byref(system_mask)
+    ):
         raise ctypes.WinError(ctypes.get_last_error())
     messages.put(('start', time.perf_counter(), os.getpid(), process_mask.value))
     if not release.wait(40):
@@ -32,6 +40,7 @@ def _worker_probe(messages, release):
 def test_shared_worker_ceiling_and_reserved_processors():
     sys.path.insert(0, str(HERE))
     from compute_resources import profile
+
     policy = profile()
     limit = policy['cad_audit_workers']
     expected_mask = sum(1 << i for i in policy['logical_processors'])
@@ -47,7 +56,7 @@ def test_shared_worker_ceiling_and_reserved_processors():
         assert all(row[0] == 'start' and row[3] == expected_mask for row in rows)
         # Two extra processes have started but may not enter the CAD work slot.
         with pytest.raises(queue.Empty):
-            messages.get(timeout=.4)
+            messages.get(timeout=0.4)
         release.set()
         while len(rows) < 2 * len(processes):
             rows.append(messages.get(timeout=15))
@@ -66,5 +75,6 @@ def test_shared_worker_ceiling_and_reserved_processors():
             if process.pid is not None:
                 process.join(timeout=2)
                 if process.is_alive():
-                    process.terminate(); process.join(timeout=2)
+                    process.terminate()
+                    process.join(timeout=2)
         messages.close()

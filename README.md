@@ -75,9 +75,10 @@ flow5 연결은 동체를 제외한 VLM2 양력면 해석입니다. 상세 후�
 설치 후 저장소에 포함된 생성 기체를 사용하는 검사를 실행할 수 있습니다.
 
 ```powershell
-.venv\Scripts\python.exe -m unittest discover -s ui/tests
+.venv\Scripts\python.exe -m pytest -q tests/studio
 npm.cmd --prefix ui run check
 npm.cmd --prefix ui test
+.venv\Scripts\python.exe -m ruff format --check src tests scripts
 .venv\Scripts\python.exe -m pytest -q tests/test_hybrid_compose.py tests/test_ui_generated_pipeline.py
 ```
 
@@ -88,9 +89,11 @@ npm.cmd --prefix ui test
 | 경로 | 내용 |
 |---|---|
 | `src/dbf_stability/` | 공력 연결·트림·안정성·줄 운동 계산 |
-| `ui/` | 3D 배치 편집기와 로컬 해석 서버 |
-| `tests/`, `ui/tests/` | 계산부·UI 검사 |
+| `src/dbf_studio/` | 로컬 해석 서버, 모델 등록, 해석 작업 실행 |
+| `ui/` | 3D 배치 편집기 화면(HTML·JS·CSS)과 사용자 자료 |
+| `tests/`, `tests/studio/`, `ui/tests/` | 계산부·서버·화면 검사 |
 | `scripts/` | 해석기 설치와 검증 도구 |
+| [코드 구조](docs/ARCHITECTURE.md) | 패키지·모듈 지도와 의존 방향 |
 | [사용설명서](docs/사용설명서.md) | 화면 조작과 입력 순서 |
 | [기체 정의 안내](docs/aircraft_definition.md) | 부품·CG·관성·공력 면 등록 |
 | [물리모델 설명](docs/MODEL.md) | 계산식·좌표·가정과 적용 범위 |

@@ -1,11 +1,11 @@
 """Double-click launcher; reuse the local server and preserve its running jobs."""
+
 from __future__ import annotations
 
 import argparse
 from datetime import datetime
 import json
 import os
-from pathlib import Path
 import socket
 import subprocess
 import sys
@@ -13,7 +13,8 @@ import time
 from urllib.error import URLError
 from urllib.request import ProxyHandler, build_opener
 
-ROOT = Path(__file__).resolve().parent.parent
+from .paths import ROOT, UI, DATA
+
 URL = "http://127.0.0.1:8767/"
 HTTP = build_opener(ProxyHandler({}))
 
@@ -46,19 +47,23 @@ def ensure_server() -> None:
         print("Port 8767 is in use; checking whether DBF Studio is starting...", flush=True)
     else:
         python = ROOT / ".venv/Scripts/python.exe"
-        three = ROOT / "ui/node_modules/three/build/three.module.js"
-        for required in (python, three, ROOT / "ui/server.py"):
+        three = UI / "node_modules/three/build/three.module.js"
+        for required in (python, three, UI / "index.html"):
             if not required.is_file():
                 raise RuntimeError(f"Required file is missing: {required}\nSee ui/README.md for setup.")
-        logs = ROOT / "ui/data/launcher"
+        logs = DATA / "launcher"
         logs.mkdir(parents=True, exist_ok=True)
         log_path = logs / f"server-{datetime.now():%Y%m%d-%H%M%S-%f}.log"
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         with log_path.open("wb") as log:
             process = subprocess.Popen(
-                [str(python), "-u", str(ROOT / "ui/server.py"), "--port", "8767", "--workers", "2"],
-                cwd=ROOT, env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                [str(python), "-u", "-m", "dbf_studio.server", "--port", "8767", "--workers", "2"],
+                cwd=ROOT,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=log,
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
         print(f"Starting DBF Studio. Log: {log_path}", flush=True)

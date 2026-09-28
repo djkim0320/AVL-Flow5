@@ -2,7 +2,7 @@
 
 이 저장소는 DBF Studio와 Python 계산부의 소스 배포본이다. 실물 비행 안전성이나 전체 임무 수렴을 인증한 결과물이 아니다.
 
-포함한 파일은 `src/`, `ui/`의 실행 코드, `tests/`, `ui/tests/`, 중립 입력 템플릿, YAML 예제, 모델링 생성 스크립트·AVL 입력, 노트북, 설명서다. 복합 공력표 구현 기록과 UI 검증 화면도 포함한다.
+포함한 파일은 `src/`(`dbf_stability` 계산부, `dbf_studio` 서버)와 `ui/`의 실행 코드, `tests/`, `tests/studio/`, `ui/tests/`, 중립 입력 템플릿, YAML 예제, 모델링 생성 스크립트·AVL 입력, 노트북, 설명서다. 복합 공력표 구현 기록과 UI 검증 화면도 포함한다.
 
 다음 항목은 로컬에 남겨 두며 Git으로 전송하지 않는다.
 
@@ -11,7 +11,7 @@
 - `ui/data/`의 사용자 프로젝트·등록 모델·해석 결과
 - `outputs/`, 모델별 `runs/`, 공력 실행 원본·진단 기록
 - 생성된 STEP·STL·GLB 등 CAD와 대용량 재생·시계열 자료
-- `ui/design/`의 수정 전 백업과 임시 검증 폴더
+- `ui/design/`의 수정 전 백업과 임시 검증 폴더(구현 기록 `IMPLEMENTATION.md`는 포함)
 
 공식 해석기는 `scripts/fetch_avl.py`, `scripts/fetch_flow5.py`로 설치한다. 출처와 해시 검사를 포함한다. [외부 구성요소 안내](THIRD_PARTY.md)의 라이선스·출처 설명은 설치한 외부 구성요소에 관한 설명이며, 이 Git 저장소에 실행파일을 동봉했다는 뜻은 아니다.
 

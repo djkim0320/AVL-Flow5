@@ -233,7 +233,7 @@ B-2단계로 필요가 해결되면 하지 않는다. 할 경우:
 # 프로젝트 폴더
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m pytest -q -m "avl and slow" tests/test_hybrid_compose.py
-.venv\Scripts\python.exe -m unittest discover -s ui/tests
+.venv\Scripts\python.exe -m pytest -q tests/studio
 Get-ChildItem ui -Recurse -File -Include *.py,*.js,*.html | Where-Object { $_.FullName -notmatch '\\(design|data|output|node_modules)\\' } | Select-String -CaseSensitive -Pattern "'h1'|`"h1`"|\bH1\b|h1_recovery|H1_reference|builtin|/api/reference|getReference|DATABASES"
 ```
 

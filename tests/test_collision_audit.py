@@ -1,4 +1,5 @@
 """Regression checks using the independently audited, real H1 saved trajectory."""
+
 from pathlib import Path
 import json
 import shutil
@@ -12,8 +13,7 @@ RUN = Path(__file__).resolve().parents[1] / 'test_models/H1_reference/runs/20260
 
 @pytest.fixture
 def audited_run(tmp_path):
-    names = ('states.npz', 'inputs.json', 'timeseries.csv', 'summary.json',
-             'events.json', 'cad_collision_audit.json')
+    names = ('states.npz', 'inputs.json', 'timeseries.csv', 'summary.json', 'events.json', 'cad_collision_audit.json')
     if not all((RUN / n).exists() for n in names):
         pytest.skip('Requires delivered H1 states and independent CAD audit')
     for name in names:

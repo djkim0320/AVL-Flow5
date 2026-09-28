@@ -7,7 +7,7 @@ if not exist ".venv\Scripts\python.exe" (
     pause
     exit /b 1
 )
-".venv\Scripts\python.exe" "ui\launch.py" %*
+".venv\Scripts\python.exe" -m dbf_studio.launch %*
 if errorlevel 1 (
     echo.
     echo DBF Studio could not open. See the message above.
