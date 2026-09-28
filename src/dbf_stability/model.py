@@ -43,11 +43,9 @@ class CoupledModel:
         self.trim = trim or {"elevator_deg": 0., "thrust_N": 0., "alpha_rad": 0.}
         self.controller = cfg['flight'].get('controller')
         if self.controller and self.controller.get('enabled'):
-            from .control import validate_controller
+            from .control import validate_controller, resolve_controller
             validate_controller(cfg['flight'], cfg['aircraft'], cfg['aero'])
-            limits = self.controller['elevator_limits_deg']
-            if limits[0] < aero.axes[2][0] or limits[1] > aero.axes[2][-1]:
-                raise ValueError('Controller elevator limits exceed loaded aerodynamic database')
+            self.controller = resolve_controller(cfg, aero, self.trim)
         self.captured = False
         self.capture_time = None
         self.active_override = None

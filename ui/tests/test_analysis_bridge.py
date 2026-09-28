@@ -51,6 +51,21 @@ class AnalysisBridgeChecks(RegisteredCase):
         for changes in ({'controller':True,'task':'stability'},{'aircraft_inertia':[[0,0,0],[0,1,0],[0,0,1]]},{'EA':''},{'workers':13}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):prepare(self.p,{**self.s,**changes})
 
+    def test_control_switch_has_complete_settings_for_legacy_projects(self):
+        self.s.update(task='sequence',controller=True,controller_parameters={'enabled':False})
+        result=prepare(self.p,self.s);c=result['config']['flight']['controller']
+        self.assertTrue(c['enabled'])
+        self.assertEqual(c['type'],'longitudinal_pd')
+        self.assertEqual(c['elevator_pitch_sign'],'from_aero')
+        self.assertEqual(c['enable_from_s'],0.)
+        self.assertEqual(c['altitude_m'],self.s['altitude'])
+        self.assertEqual(c['airspeed_m_s'],self.s['speed'])
+        self.assertIn('controller',result['config']['provenance'])
+
+    def test_explicit_bad_controller_is_not_replaced_by_defaults(self):
+        self.s.update(controller=True,controller_parameters={'type':'longitudinal_pd','pitch_kp':0.})
+        with self.assertRaises(ValueError):prepare(self.p,self.s)
+
     def test_scene_start_cannot_silently_become_aircraft_perturbation(self):
         self.s.update(task='response',phase='aircraft_only',start='scene')
         with self.assertRaisesRegex(ValueError,'전개 상태'):prepare(self.p,self.s)

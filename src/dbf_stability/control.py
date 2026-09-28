@@ -7,6 +7,48 @@ measurement and instantaneous actuators: not a TECS or flight-certified autopilo
 import numpy as np
 
 
+def controller_defaults(config):
+    """Visible experimental gains, never enabled implicitly or claimed tuned."""
+    return dict(enabled=False, type='longitudinal_pd', enable_from_s=0., engage_ramp_s=1.,
+        altitude_m=config['flight']['altitude_m'], airspeed_m_s=config['flight']['speed_m_s'],
+        altitude_kp_deg_m=.8, climb_kd_deg_per_m_s=2., pitch_kp=.8,
+        pitch_rate_kd_s=.15, airspeed_kp_N_per_m_s=4., elevator_pitch_sign='from_aero',
+        pitch_limits_deg=[-6., 6.],
+        elevator_limits_deg=[min(config['aero']['elevator_deg']), max(config['aero']['elevator_deg'])],
+        thrust_limits_N=[0., config['aircraft']['max_thrust_N']],
+        measurement_model='perfect_state', actuator_model='instantaneous_bounded',
+        gain_source='experimental initial gains; not aircraft-specific tuning')
+
+
+def resolve_controller(config, aero, trim):
+    """Determine/check elevator direction from the actual CG moment derivative."""
+    c = dict(config['flight'].get('controller') or {})
+    if not c.get('enabled'):
+        return c
+    limits = c['elevator_limits_deg']
+    if limits[0] < aero.axes[2][0] or limits[1] > aero.axes[2][-1]:
+        raise ValueError('Controller elevator limits exceed loaded aerodynamic database')
+    if not limits[0] <= trim['elevator_deg'] <= limits[1] or not c['thrust_limits_N'][0] <= trim['thrust_N'] <= c['thrust_limits_N'][1]:
+        raise ValueError('Controller limits exclude the initial trim commands')
+    lo = max(aero.axes[2][0], trim['elevator_deg']-.1)
+    hi = min(aero.axes[2][-1], trim['elevator_deg']+.1)
+    if hi <= lo:
+        raise ValueError('Cannot determine elevator authority at trim')
+    speed = config['flight']['speed_m_s']
+    dc = (aero.evaluate(trim['alpha_rad'], 0., hi, np.zeros(3), speed)
+          - aero.evaluate(trim['alpha_rad'], 0., lo, np.zeros(3), speed))/(hi-lo)
+    area, chord, _ = aero.refs
+    offset = np.array(aero.metadata['moment_reference_frd_m'])-config['aircraft']['cg_m']
+    derivative = .5*config['flight']['rho_kg_m3']*speed**2*area*(chord*dc[4]+np.cross(offset, dc[:3])[1])
+    if not np.isfinite(derivative) or abs(derivative) < 1e-8:
+        raise ValueError('No usable elevator pitch authority in the actual aerodynamic table')
+    sign = int(np.sign(derivative))
+    if c['elevator_pitch_sign'] != 'from_aero' and c['elevator_pitch_sign'] != sign:
+        raise ValueError('Controller elevator direction opposes the actual CG pitch moment derivative')
+    c.update(elevator_pitch_sign=sign, elevator_moment_derivative_Nm_deg=float(derivative))
+    return c
+
+
 def validate_controller(flight, aircraft, aero):
     c = flight.get('controller')
     if c is None:
@@ -27,8 +69,8 @@ def validate_controller(flight, aircraft, aero):
         raise ValueError('Invalid controller timing or targets')
     if any(c[key] <= 0 for key in scalar[4:]):
         raise ValueError('Controller gains must be positive')
-    if c.get('elevator_pitch_sign') not in (-1, 1):
-        raise ValueError('Explicit elevator_pitch_sign required')
+    if c.get('elevator_pitch_sign') not in (-1, 1, 'from_aero'):
+        raise ValueError('elevator_pitch_sign must be -1, 1 or from_aero')
     for name in ('pitch_limits_deg', 'elevator_limits_deg', 'thrust_limits_N'):
         limits = np.asarray(c.get(name, []), float)
         if limits.shape != (2,) or not np.isfinite(limits).all() or limits[0] >= limits[1]:

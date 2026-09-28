@@ -66,4 +66,32 @@ def test_registered_point_mass_modes_and_recovery(tmp_path):
             assert np.count_nonzero(np.isclose(result.time,boundary,rtol=0,atol=1e-10))==1
         from mission_sequence import stage_at
         assert [stage_at(t,schedule) for t in (0,schedule['release_s'],schedule['deployed_s'],schedule['recovery_s'])]==['비행 시작','전개','전개 후 비행','회수']
+        # The UI switch must yield a real controlled response and exportable
+        # tracking metrics, not just a configuration that passes validation.
+        settings.update(controller=True)
+        controlled=prepare(p,settings)
+        cc=controlled['config'];before=copy.deepcopy(cc['flight']['controller'])
+        controlled_trim=solve_trim(cc,db,mode='stowed')
+        assert cc['flight']['controller']==before  # equilibrium must not turn off the user's control
+        np.testing.assert_allclose(controlled_trim['state'],stowed_trim['state'])
+        from dbf_stability.control import resolve_controller
+        resolved=resolve_controller(cc,db,controlled_trim)
+        assert resolved['elevator_pitch_sign'] in (-1,1)
+        bad=copy.deepcopy(cc);bad['flight']['controller']['elevator_pitch_sign']=-resolved['elevator_pitch_sign']
+        with pytest.raises(ValueError,match='direction opposes'):resolve_controller(bad,db,controlled_trim)
+        initial=controlled_trim['state'].copy();initial[2]+=.1
+        controlled_result=simulate(cc,db,controlled_trim,phase='mission',initial_state=initial,duration=.1,output=tmp_path/'controlled')
+        assert controlled_result.summary['status']=='completed'
+        assert controlled_result.summary['controller_enabled']
+        assert controlled_result.summary['max_altitude_error_m']>=.1-1e-9
+        assert controlled_result.table.controller_active.iloc[-1]
+        assert 0<=controlled_result.summary['thrust_saturated_time_fraction']<=1
+        from dbf_stability.plots import history_figure
+        assert len(history_figure(controlled_result).data)==15
+        from analysis_worker import replay_data
+        replay_data(controlled_result,p,controlled,tmp_path/'controlled')
+        import json
+        replay=json.loads((tmp_path/'controlled/replay.json').read_text('utf8'))
+        assert replay['controller_enabled'] and replay['model_id']==record['id']
+        assert replay['frames'][-1]['speed_m_s']==pytest.approx(controlled_result.table.airspeed_m_s.iloc[-1])
     finally:model_registry.DIRECTORY=original

@@ -71,6 +71,11 @@ def load_result(directory, *, apply_geometry_audit=True):
 
 
 def solve_trim(config, aero, mode="deployed", length=None):
+    # Equilibrium is an open-loop operating point. Resolve feedback direction
+    # only against the resulting trim, never the optimizer's placeholder state.
+    if (config['flight'].get('controller') or {}).get('enabled'):
+        config=copy.deepcopy(config)
+        config['flight']['controller']['enabled']=False
     with ExitStack() as resources:
         return _solve_trim(config,aero,mode,length,resources)
 
@@ -498,6 +503,19 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
              "limitations":["rear wake/exposure prescribed, not resolved CFD","bead release needs mesh convergence",
                             "CAD mesh separation barrier; impact loads uncalibrated; cable/winch winding and cable self-contact not modelled" if model.mesh_contact_enabled else "compliant discrete-point contact; no structural failure prediction",
                             "explicit longitudinal PD/P control; perfect state and instantaneous bounded actuators; no lateral control" if controller.get('enabled') else "no pilot/autopilot stabilisation"]}
+    summary.update(controller_enabled=bool(controller.get('enabled')),
+                   min_altitude_m=float(frame.altitude_m.min()), max_altitude_m=float(frame.altitude_m.max()),
+                   final_altitude_m=float(frame.altitude_m.iloc[-1]),
+                   min_airspeed_m_s=float(frame.airspeed_m_s.min()), max_airspeed_m_s=float(frame.airspeed_m_s.max()))
+    if controller.get('enabled'):
+        summary.update(controller_resolved=model.controller,
+            max_altitude_error_m=float(frame.altitude_error_m.abs().max()),
+            max_airspeed_error_m_s=float((frame.airspeed_m_s-controller['airspeed_m_s']).abs().max()))
+        # Time-weighted duty, not a sample count: event boundaries add samples.
+        for key in ('elevator_saturated','thrust_saturated'):
+            values=frame[key].to_numpy(dtype=float)
+            duty=np.sum(np.diff(times)*(values[1:]+values[:-1])*.5)/(times[-1]-times[0]) if times[-1]>times[0] else 0.
+            summary[key+'_time_fraction']=float(duty)
     if model.mesh_contact_enabled and model._mesh_contacts is not None:
         from importlib.metadata import version
         summary['collision_metadata']={'query_engine':'pybullet','version':version('pybullet'),

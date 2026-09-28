@@ -15,7 +15,12 @@ def validity_annotation(fig, result):
 
 def history_figure(result):
     t=result.table
-    fig=make_subplots(rows=3,cols=1,shared_xaxes=True,subplot_titles=('Aircraft attitude','Cable and contact loads','Sensor position relative to aircraft'))
+    controlled=result.summary.get('controller_enabled',False)
+    rows=6 if controlled else 3
+    titles=('Aircraft attitude','Cable and contact loads','Sensor position relative to aircraft')
+    fig=make_subplots(rows=rows,cols=1,shared_xaxes=True,
+        subplot_titles=titles+('Altitude tracking','Airspeed tracking','Elevator and thrust commands') if controlled else titles,
+        specs=[[{}] for _ in range(rows-1)]+[[{'secondary_y':True} if controlled else {}]])
     for key,color in [('roll_deg','#2563a6'),('pitch_deg','#c57a22'),('yaw_deg','#63764c')]:
         fig.add_trace(go.Scatter(x=t.time_s,y=t[key],name=key,line=dict(color=color)),row=1,col=1)
     for key,color in [('tension_N','#2563a6'),('contact_N','#c57a22'),('capture_N','#63764c')]:
@@ -25,8 +30,17 @@ def history_figure(result):
     fig.update_yaxes(title_text='Angle (deg)',row=1,col=1)
     fig.update_yaxes(title_text='Force (N)',row=2,col=1)
     fig.update_yaxes(title_text='Position (m)',row=3,col=1)
-    fig.update_xaxes(title_text='Time (s)',row=3,col=1)
-    fig.update_layout(template='plotly_white',height=850,title=result.summary['aero_metadata']['solver']+' coupled case — unvalidated assumptions',legend=dict(orientation='h'),margin=dict(t=100,b=90))
+    if controlled:
+        for row,actual,target,unit in [(4,'altitude_m','altitude_setpoint_m','Altitude (m)'),(5,'airspeed_m_s','airspeed_setpoint_m_s','Airspeed (m/s)')]:
+            fig.add_trace(go.Scatter(x=t.time_s,y=t[actual],name=actual),row=row,col=1)
+            fig.add_trace(go.Scatter(x=t.time_s,y=t[target],name=target,line=dict(dash='dash')),row=row,col=1)
+            fig.update_yaxes(title_text=unit,row=row,col=1)
+        fig.add_trace(go.Scatter(x=t.time_s,y=t.elevator_deg,name='elevator_deg'),row=6,col=1,secondary_y=False)
+        fig.add_trace(go.Scatter(x=t.time_s,y=t.thrust_N,name='thrust_N'),row=6,col=1,secondary_y=True)
+        fig.update_yaxes(title_text='Elevator (deg)',row=6,col=1,secondary_y=False)
+        fig.update_yaxes(title_text='Thrust (N)',row=6,col=1,secondary_y=True)
+    fig.update_xaxes(title_text='Time (s)',row=rows,col=1)
+    fig.update_layout(template='plotly_white',height=1500 if controlled else 850,title=result.summary['aero_metadata']['solver']+' coupled case — unvalidated assumptions',legend=dict(orientation='h'),margin=dict(t=100,b=90))
     return validity_annotation(fig, result)
 
 

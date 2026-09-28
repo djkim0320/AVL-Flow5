@@ -1,6 +1,7 @@
 // Registration and advanced solver inputs share the frozen analysis snapshot.
 import {initAeroRanges} from './aero-ranges.js';
 import {tableOptions,workerOptions} from './analysis-options.js';
+import {restoreController} from './controller-settings.js';
 const number=(name,label)=>`<label>${label}<input name="${name}" type="number" step="any"></label>`;
 const json=(name,label,rows=3)=>`<label>${label}<textarea name="${name}" rows="${rows}" spellcheck="false"></textarea></label>`;
 
@@ -32,7 +33,7 @@ export function initSettings({form,request,getProject,selectModel,showError,open
   ${json('gust','돌풍 설정 · 없으면 null',4)}${json('controls','승강타·추력 입력 이력',4)}${json('controller_parameters','제어기 이득과 제한값 · 활성화는 위 체크박스',6)}</details>`;
   form.append(inputs);
   const field=name=>form.elements.namedItem(name);
-  const rememberedTables=new Map();let tableContext=null,workerMaximum=1;
+  const rememberedTables=new Map();let tableContext=null,workerMaximum=1,controllerDefaults=null;
   const parse=name=>{try{return JSON.parse(field(name).value);}catch{throw new Error(field(name).closest('label').childNodes[0].textContent+': JSON 형식을 확인하세요.');}};
   function read(key,base){
     if(key==='aero_hybrid')return Object.fromEntries(['coeff','controls','rates'].map(k=>[k,field('hybrid_'+k).value]));
@@ -47,6 +48,7 @@ export function initSettings({form,request,getProject,selectModel,showError,open
   }
   function readNumber(name){const e=field(name);if(!e.value.trim()||!Number.isFinite(Number(e.value)))throw new Error((e.closest('label')?.childNodes[0]?.textContent.trim()||name)+': 숫자를 입력하세요.');return Number(e.value);}
   function write(key,value){
+    if(key==='controller_parameters')value=restoreController(value,controllerDefaults);
     if(key==='aero_hybrid'){for(const k of ['coeff','controls','rates'])field('hybrid_'+k).value=value[k];return;}
     if(key==='aero_grid'){ranges.write(value);return;}
     if(key==='mechanism')return;
@@ -79,5 +81,5 @@ export function initSettings({form,request,getProject,selectModel,showError,open
     }catch(e){showError(e.message);status.textContent='등록하지 못했습니다.';}finally{button.disabled=false;}
   };
   function showRegistration(name){const details=document.getElementById('model-registration');details.open=true;if(!field('reg_name').value)field('reg_name').value=(name||'').replace(/\.[^.]+$/,'');details.scrollIntoView({block:'start'});field('reg_name').focus();}
-  return {read,write,refreshModels,tables,ranges,showRegistration,resources:maximum=>{workerMaximum=maximum;}};
+  return {read,write,refreshModels,tables,ranges,showRegistration,resources:maximum=>{workerMaximum=maximum;},controllerDefaults:value=>{controllerDefaults=structuredClone(value);}};
 }

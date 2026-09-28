@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 from dbf_stability import load_case, AeroDatabase
 from dbf_stability.config import validate
+from dbf_stability.control import controller_defaults
 import model_registry
 import mechanisms
 
@@ -68,7 +69,10 @@ def catalog(model_id):
     defaults.update(model_id=model_id,aero_job='new',mission_start='registered',aero_hybrid=dict(coeff='flow5',controls='flow5',rates='avl'),
                     mechanism=mechanisms.defaults(c),aero_grid={k:c['aero'][k] for k in ('alpha_deg','beta_deg','elevator_deg')},
                     gust=c['flight'].get('gust'),controls=c['flight'].get('controls',{}),
-                    controller_parameters=c['flight'].get('controller',{}))
+                    controller_parameters=controller_defaults(c))
+    registered_control=c['flight'].get('controller') or {}
+    if set(registered_control)-{'enabled'}:
+        defaults['controller_parameters']=copy.deepcopy(registered_control)
     databases={backend:dict(executable_available=(ROOT/c['aero']['flow5_executable' if backend=='flow5' else 'executable']).is_file()) for backend in ('avl','flow5')}
     databases['hybrid']=dict(executable_available=all(row['executable_available'] for row in databases.values()))
     tables=[]
@@ -212,10 +216,18 @@ def prepare(project, settings):
     c['simulation']['sample_dt_s']=min(.02,duration/10)
     c['simulation']['checkpoint_interval_s']=2.
     c['simulation']['duration_s']=duration
+    # Legacy projects stored only {enabled:false}; upgrade the empty settings,
+    # while preserving (and validating) every explicitly entered gain.
+    if isinstance(s['controller_parameters'],dict) and not set(s['controller_parameters'])-{'enabled'}:
+        s['controller_parameters']=controller_defaults(c)
+    if not isinstance(s['controller_parameters'],dict):
+        raise ValueError('제어기 설정은 JSON 객체로 입력하세요.')
     c['flight']['controller']=copy.deepcopy(s['controller_parameters'])
     c['flight']['controller']['enabled']=s['controller']
     c['flight']['controls']=copy.deepcopy(s['controls']);c['flight']['gust']=copy.deepcopy(s['gust'])
     c['flight']['controller']['altitude_m']=s['altitude'];c['flight']['controller']['airspeed_m_s']=s['speed']
+    if s['controller']:
+        c['provenance']['controller']={'kind':'assumed','source':'Explicit UI longitudinal PD/P feedback; perfect state, instantaneous bounded elevator/thrust; no lateral control. Gains and limits saved in flight.controller.'}
     if task in ('stability','trim') and s['controller']:
         raise ValueError('트림·고유값 계산에서는 제어를 꺼 주세요. 제어 응답은 시간응답으로 평가합니다.')
     if task=='stability' and phase=='stowed':raise ValueError('고유값 해석은 기체 단독 또는 비접촉 전개 평형을 선택하세요.')

@@ -37,10 +37,13 @@ def replay_data(result,project,prepared,folder):
         frames.append(dict(t=float(result.time[i]),sensor=pos.tolist(),quaternion=Rotation.from_matrix(rot).as_quat().tolist(),
                            aircraft_quaternion=Rotation.from_matrix(r).as_quat().tolist(),
                            altitude_m=float(-y[2]),cable=line.tolist(),door=float(result.table.door_deg.iloc[i]),
+                           speed_m_s=float(result.table.airspeed_m_s.iloc[i]),
+                           elevator_deg=float(result.table.elevator_deg.iloc[i]),thrust_N=float(result.table.thrust_N.iloc[i]),
                            length_m=float(result.table.length_m.iloc[i]),
                            stage=str(result.table.mission_stage.iloc[i]) if 'mission_stage' in result.table else str(result.table.phase.iloc[i])))
     write_json(folder/'replay.json',dict(frames=frames,phase=result.summary['phase'],mapping=prepared['mapping'],project_file='replay_project.json',
                   model_name=prepared['profile']['name'],model_id=prepared['profile']['id'],
+                  controller_enabled=result.summary.get('controller_enabled',False),
                   hinge=door_hinge(c['bay']).tolist(),status=result.summary['status'],
                   note=('질점 운동 계산 재생 · 구는 위치 표시용 · 형상 접촉/센서 공력 제외' if c['sensor'].get('model')=='point_mass' else '실제 계산 상태 재생 · 기체 CG 추적/지면축 고정 · 형상 간섭 감사/수렴 검증 미완료')))
 

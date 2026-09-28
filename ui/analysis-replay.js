@@ -32,7 +32,7 @@ try{
   }
   const line=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#4c9aff'}));vehicle.add(line);line.visible=data.phase!=='aircraft_only';
   const frames=data.frames;let at=0,playing=false,last=0,clock=frames[0].t;
-  function draw(index){at=index;const f=frames[index];$('frame').value=index;$('time').textContent=f.t.toFixed(3)+' s · '+f.altitude_m.toFixed(2)+' m'+(f.stage?' · '+f.stage:'')+(Number.isFinite(f.length_m)?' · 줄 '+f.length_m.toFixed(2)+' m':'');
+  function draw(index){at=index;const f=frames[index];$('frame').value=index;$('time').textContent=f.t.toFixed(3)+' s · '+f.altitude_m.toFixed(2)+' m'+(Number.isFinite(f.speed_m_s)?' · '+f.speed_m_s.toFixed(2)+' m/s':'')+(f.stage?' · '+f.stage:'')+(Number.isFinite(f.length_m)?' · 줄 '+f.length_m.toFixed(2)+' m':'');
     vehicle.quaternion.fromArray(f.aircraft_quaternion);
     if(groups.sensor){groups.sensor.position.fromArray(f.sensor);groups.sensor.quaternion.fromArray(f.quaternion);}
     for(const door of doors)door.rotation.y=THREE.MathUtils.degToRad(f.door-(data.mapping.door_reference_deg??270));
@@ -51,7 +51,7 @@ try{
   orbit.target.copy(center);orbit.update();orbit.addEventListener('change',()=>renderer.render(scene,camera));
   new ResizeObserver(()=>{const r=host.getBoundingClientRect();renderer.setSize(r.width,r.height);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.render(scene,camera);}).observe(host);
   $('frame').max=frames.length-1;$('frame').disabled=false;$('play').disabled=false;
-  $('message').textContent=`${aircraftName?'기체 파일: '+aircraftName+' · ':''}${data.note} · 상태: ${data.status} · ${frames.length}개 실제 상태 표본 (표본 사이 보간 없음)`;
+  $('message').textContent=`${aircraftName?'기체 파일: '+aircraftName+' · ':''}${data.note} · 고도·속도 제어 ${data.controller_enabled?'켜짐':'꺼짐'} · 상태: ${data.status} · ${frames.length}개 실제 상태 표본 (표본 사이 보간 없음)`;
   $('frame').oninput=()=>{playing=false;$('play').textContent='재생';draw(Number($('frame').value));clock=frames[at].t;};
   $('play').onclick=()=>{playing=!playing;if(playing&&at===frames.length-1){draw(0);clock=frames[0].t;}last=performance.now();$('play').textContent=playing?'일시 정지':'재생';};
   function animate(now){if(playing){clock+=(now-last)/1000*Number($('rate').value);let next=at;while(next<frames.length-1&&frames[next+1].t<=clock)next++;if(next!==at)draw(next);if(next===frames.length-1){playing=false;$('play').textContent='다시 재생';}}last=now;requestAnimationFrame(animate);}draw(0);requestAnimationFrame(animate);
