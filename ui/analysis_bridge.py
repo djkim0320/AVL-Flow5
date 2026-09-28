@@ -59,7 +59,7 @@ def catalog(model_id):
     profile=model_registry.load(model_id);c=profile['config']
     defaults = {k: c[path.split('.')[0]][path.split('.')[1]] for k,(path,_,_) in FIELDS.items()
                 if path.split('.')[1] in c[path.split('.')[0]]}
-    defaults.update(backend='avl', task='stability', phase='aircraft_only', start='equilibrium',
+    defaults.update(backend='avl', task='sequence', phase='stowed', start='equilibrium', sequence_ui_version=1, preflight=2.,
                     duration=2., workers=worker_limit(os_cpu_count()), rebuild=False,
                     controller=False, hold=60., payout=.75, recovery=.3, recovery_length=.1,
                     pitch_delta=1., sensor_yaw_delta=0.,
@@ -108,16 +108,16 @@ def prepare(project, settings):
             raise ValueError('기체 정의가 등록 모델과 다릅니다. 부품·CG·공력 면 변경을 확인하고 새 버전으로 등록하세요.')
     point_mass=project.get('schema')=='dbf-assembly/2'
     defaults=catalog(profile['id'])['defaults']
-    for key in ('model_id','aero_job','mission_start','mechanism','aero_grid','gust','controls','controller_parameters','recovery_length','aero_hybrid'):
+    for key in ('model_id','aero_job','mission_start','mechanism','aero_grid','gust','controls','controller_parameters','recovery_length','aero_hybrid','preflight','sequence_ui_version'):
         s.setdefault(key,copy.deepcopy(defaults[key]))
     missing=set(defaults)-set(s)
     if point_mass:
         missing-={'sensor_mass','sensor_cd','sensor_inertia','sensor_yaw_delta'}
     if missing: raise ValueError('해석 조건이 빠졌습니다: '+', '.join(sorted(missing)))
-    if s['task'] not in ('aero','trim','stability','response','mission','flight','recovery'): raise ValueError('해석 종류를 확인하세요.')
-    if s['task'] in ('flight','recovery'):
+    if s['task'] not in ('aero','trim','stability','response','mission','flight','recovery','sequence'): raise ValueError('해석 종류를 확인하세요.')
+    if s['task'] in ('flight','recovery','sequence'):
         if not point_mass:raise ValueError('전개 비행·회수는 질점 모델을 사용하세요.')
-        s['phase']='recovery' if s['task']=='recovery' else 'deployed'
+        s['phase']='stowed' if s['task']=='sequence' else 'recovery' if s['task']=='recovery' else 'deployed'
         s['start']='equilibrium'
     if s['phase'] not in ('aircraft_only','stowed','deployed','recovery') or s['phase']=='recovery' and s['task']!='recovery': raise ValueError('비행 상태를 확인하세요.')
     if s['start'] not in ('equilibrium','scene'): raise ValueError('초기 상태를 확인하세요.')
@@ -144,11 +144,13 @@ def prepare(project, settings):
             continue
         v=number(s[key],key,lo,hi,key=='segments'); a,b=path.split('.'); c[a][b]=v;s[key]=v
     inactive=({'hold','payout','recovery'} if s['task']=='flight' else
-              {'hold','payout','duration','pitch_delta'} if s['task']=='recovery' else set())
+              {'hold','payout','duration','pitch_delta'} if s['task']=='recovery' else
+              {'duration','pitch_delta'} if s['task']=='sequence' else set())
     for key,lo,hi in [('workers',1,worker_limit(os_cpu_count())),('duration',.01,600),('hold',0,600),
                       ('payout',.001,5),('recovery',.001,5),('pitch_delta',-10,10),('sensor_yaw_delta',-30,30)]:
         if key in inactive or point_mass and key=='sensor_yaw_delta':continue
         s[key]=number(s[key],key,lo,hi,key=='workers')
+    if s['task']=='sequence':s['preflight']=number(s['preflight'],'전개 전 비행 시간',.01,600)
     for role in ('aircraft','sensor'):
         if point_mass and role=='sensor':continue
         inertia=np.asarray(s[role+'_inertia'],float)
@@ -161,7 +163,7 @@ def prepare(project, settings):
         c['aircraft']['mass_kg']=profile['config']['aircraft']['mass_kg']
         c['aircraft']['inertia_kgm2']=copy.deepcopy(profile['config']['aircraft']['inertia_kgm2'])
         s['aircraft_mass']=c['aircraft']['mass_kg'];s['aircraft_inertia']=c['aircraft']['inertia_kgm2']
-    task=s['task']; phase='mission' if task=='mission' else s['phase']
+    task=s['task']; phase='mission' if task in ('mission','sequence') else s['phase']
     if task=='response' and s['start']=='scene' and phase!='deployed':
         raise ValueError('화면 배치 시작은 전개 상태 시간응답에서 선택하세요.')
     coupled=phase!='aircraft_only' and task!='aero'
@@ -206,7 +208,7 @@ def prepare(project, settings):
     c['simulation']['jacobian_workers']=max(1,s['workers']-1)
     # Recovery duration is derived from line length and speed below, not the
     # hidden flight-duration field. This provisional value is never integrated.
-    duration=s['duration'] if task!='recovery' else .01
+    duration=s['duration'] if task not in ('recovery','sequence') else .01
     c['simulation']['sample_dt_s']=min(.02,duration/10)
     c['simulation']['checkpoint_interval_s']=2.
     c['simulation']['duration_s']=duration
@@ -276,7 +278,7 @@ def prepare(project, settings):
     # Preserve the registered guide/capture geometry, and derive a smooth schedule
     # from the edited feed point, attachment and requested total line length.
     length=c['cable']['length_m']; stored=c['winch']['stowed_length_m']
-    if task not in ('flight','recovery'):
+    if task not in ('flight','recovery','sequence'):
         release=m['release_s'];deploy_end=release+(length-stored)/s['payout'];recover_start=deploy_end+s['hold']
         recover_end=recover_start+(length-stored)/s['recovery'];end=recover_end+.5+m['close_time_s']+.7
         rows=[[0.,stored]]
@@ -291,6 +293,25 @@ def prepare(project, settings):
         c['bay']['release_push_until_s']=deploy_end
         if task=='mission':c['simulation']['duration_s']=end
     c['flight']['controller']['enable_from_s']=deploy_end if task=='mission' else 0.
+    if task=='sequence':
+        # One continuous airborne trajectory, with no fresh trim/state reset at
+        # deployment or recovery. The imported door remains in its CAD pose.
+        target=number(s['recovery_length'],'회수 후 남길 줄',stored,length)
+        if target>=length:raise ValueError('회수 후 남길 줄은 전개 길이보다 짧아야 합니다.')
+        s['recovery_length']=target
+        release=s['preflight'];deploy_end=release+(length-stored)/s['payout']
+        recover_start=deploy_end+s['hold'];end=recover_start+(length-target)/s['recovery']
+        if end>600:raise ValueError('전체 계산 시간은 600초 이하여야 합니다. 시간·속도·줄 길이를 확인하세요.')
+        rows=[[0.,stored],[release,stored]]
+        for start,stop,a,b in [(release,deploy_end,stored,length),(recover_start,end,length,target)]:
+            if rows[-1][0]!=start:rows.append([start,a])
+            rows.extend([[float(stop if u==1 else start+u*(stop-start)),float(b if u==1 else a+(b-a)*(3*u*u-2*u*u*u))] for u in np.linspace(0,1,21)[1:]])
+        c['simulation'].update(duration_s=end,sample_dt_s=min(.02,s['preflight']/10,(deploy_end-release)/20,(end-recover_start)/20))
+        c['winch'].update(length_schedule=rows,release_s=release,recovery_start_s=recover_start,
+                          capture_enabled=False,door_capture_interlock=False,
+                          door_schedule=[[0.,profile['door_reference_deg']],[end,profile['door_reference_deg']]])
+        c['bay']['release_push_until_s']=release
+        mapping['sensor_start']='stowed at winch; airborne trim; continuous payout, hold and recovery; no capture'
     if task in ('flight','recovery'):
         # Both scenarios begin at the full-length flight equilibrium. The door
         # remains in the imported pose, with no release, capture or door cycle.
@@ -311,7 +332,7 @@ def prepare(project, settings):
         mapping['sensor_start']='full-length flight equilibrium; fixed open door; no payout, capture or closing'
     c['provenance']['ui']={'kind':'design','source':'UI request snapshot; registered CAD signature checked; model mass/CG and wake assumptions remain unvalidated',
                            'mapping':mapping,'settings':s}
-    c['provenance']['winch']['source']+=(' UI: full-length equilibrium; fixed door; constant length or recovery-only piecewise-linear sampling of smoothstep at declared mean speed; no capture.' if task in ('flight','recovery') else ' UI overrides: smoothstep payout/recovery at declared mean speeds; selected full-length hold.')
+    c['provenance']['winch']['source']+=(' UI: continuous airborne stowed/payout/hold/recovery sequence; fixed door; no capture; declared mean winch speeds.' if task=='sequence' else ' UI: full-length equilibrium; fixed door; constant length or recovery-only piecewise-linear sampling of smoothstep at declared mean speed; no capture.' if task in ('flight','recovery') else ' UI overrides: smoothstep payout/recovery at declared mean speeds; selected full-length hold.')
     validate(c)
     warnings=(['센서는 질점입니다. 센서 공력·회전·기체/문/가이드 접촉은 계산하지 않습니다. 줄의 질량·공력·탄성·감쇠는 계산합니다.',
                '그림은 줄 길이 미리보기입니다. 트림은 평형을 새로 구하며 전개·회수의 이상적 고정점은 윈치 하방 min(20 mm, 줄 길이의 5%)입니다.',
@@ -321,8 +342,10 @@ def prepare(project, settings):
                '화면 배치 임무는 센서의 현재 위치·자세를 시작 고정점과 회수 포획 목표로 사용합니다. 트림은 평형을 새로 구합니다.'])
     if task in ('flight','recovery'):
         warnings[1]='완전 전개 상태의 평형에서 시작합니다. 문은 불러온 각도를 유지하며 전개 과정·포획·문 닫힘은 계산하지 않습니다.'
+    if task=='sequence':
+        warnings[1]='입력한 고도·속도로 비행 중인 수납 상태에서 시작해 전개·유지 비행·회수를 연속 계산합니다. 이륙·포획·문 닫힘은 계산하지 않습니다. 전개·회수 속도는 평균값이며 최대값은 약 1.5배입니다.'
     return dict(config=c,settings=s,mapping=mapping,profile=profile,aero_path=str(dbpath) if dbpath else None,phase=phase,
-                duration_s=c['simulation']['duration_s'],schedule=dict(deployed_s=deploy_end,recovery_s=recover_start,end_s=end),
+                duration_s=c['simulation']['duration_s'],schedule=dict(release_s=c['winch']['release_s'],deployed_s=deploy_end,recovery_s=recover_start,end_s=end),
                 warnings=warnings)
 
 

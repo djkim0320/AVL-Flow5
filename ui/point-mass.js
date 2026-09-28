@@ -7,13 +7,17 @@ export function pointAsset(mass){
 
 export function previewPosition(winch,aircraftQuaternion,length){
   if(!Number.isFinite(length)||length<=0||length>100)throw new Error('줄 길이는 0보다 크고 100 m 이하여야 합니다.');
-  return new THREE.Vector3(0,0,length).applyQuaternion(new THREE.Quaternion().fromArray(aircraftQuaternion)).add(new THREE.Vector3().fromArray(winch)).toArray();
+  return new THREE.Vector3(0,0,Math.min(.02,length*.05)).applyQuaternion(new THREE.Quaternion().fromArray(aircraftQuaternion)).add(new THREE.Vector3().fromArray(winch)).toArray();
 }
 
 // Old files remain on disk. Opening one discards its sensor mesh and surface
 // attachment, retaining its explicitly saved payload mass and aircraft/winch.
 export function migrateProject(value){
-  if(value.schema==='dbf-assembly/2')return value;
+  if(value.schema==='dbf-assembly/2'){
+    const out=structuredClone(value);
+    if(out.objects.sensor&&out.objects.winch)out.objects.sensor.position=previewPosition(out.objects.winch.position,out.objects.aircraft?.quaternion||[0,0,0,1],out.cable.length_m);
+    return out;
+  }
   if(value.schema!=='dbf-assembly/1')throw new Error('지원하지 않는 프로젝트 형식입니다.');
   const out=structuredClone(value);out.schema='dbf-assembly/2';
   if(out.objects.sensor){

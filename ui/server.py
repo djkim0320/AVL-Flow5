@@ -81,8 +81,9 @@ def validate_project(value):
         if attached:
             from scipy.spatial.transform import Rotation
             q=(objects.get('aircraft') or {}).get('quaternion',[0,0,0,1])
-            expected_position=np.asarray(objects['winch']['position'])+Rotation.from_quat(q).apply([0,0,length])
-            if not np.allclose(objects['sensor']['position'],expected_position,rtol=0,atol=1e-7):
+            # Read old full-length previews as well as the new stowed preview.
+            expected_positions=[np.asarray(objects['winch']['position'])+Rotation.from_quat(q).apply([0,0,distance]) for distance in (min(.02,length*.05),length)]
+            if not any(np.allclose(objects['sensor']['position'],position,rtol=0,atol=1e-7) for position in expected_positions):
                 raise ValueError('질점 미리보기 위치가 윈치 위치·줄 길이와 일치하지 않습니다.')
         return value
     if cable.get('attachment') is not None:

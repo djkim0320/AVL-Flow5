@@ -28,7 +28,7 @@ try{
   }
   const line=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#4c9aff'}));vehicle.add(line);line.visible=data.phase!=='aircraft_only';
   const frames=data.frames;let at=0,playing=false,last=0,clock=frames[0].t;
-  function draw(index){at=index;const f=frames[index];$('frame').value=index;$('time').textContent=f.t.toFixed(3)+' s · '+f.altitude_m.toFixed(2)+' m';
+  function draw(index){at=index;const f=frames[index];$('frame').value=index;$('time').textContent=f.t.toFixed(3)+' s · '+f.altitude_m.toFixed(2)+' m'+(f.stage?' · '+f.stage:'')+(Number.isFinite(f.length_m)?' · 줄 '+f.length_m.toFixed(2)+' m':'');
     vehicle.quaternion.fromArray(f.aircraft_quaternion);
     if(groups.sensor){groups.sensor.position.fromArray(f.sensor);groups.sensor.quaternion.fromArray(f.quaternion);}
     for(const door of doors)door.rotation.y=THREE.MathUtils.degToRad(f.door-(data.mapping.door_reference_deg??270));

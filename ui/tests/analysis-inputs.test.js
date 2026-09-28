@@ -16,12 +16,13 @@ test('legacy nonuniform samples survive without inferred replacement',()=>{
   assert.deepEqual(loaded,original);loaded[0]=-5;assert.equal(original[0],-4);
   for(const values of [[1],[1,1],[2,1],[NaN,3],null])assert.throws(()=>checkedSamples(values));
 });
-test('old analysis choices migrate to flight/recovery without changing physical inputs',()=>{
-  for(const task of ['aero','trim','stability','response','flight']){
+test('old analysis choices migrate to continuous sequence without changing physical inputs',()=>{
+  for(const task of ['aero','trim','stability','response','flight','mission','recovery']){
     const previous={task,phase:'aircraft_only',start:'scene',speed:25,workers:12};
-    assert.deepEqual(currentScenario(previous),{...previous,task:'flight',phase:'deployed',start:'equilibrium'});
+    assert.deepEqual(currentScenario(previous),{...previous,sequence_ui_version:1,task:'sequence',phase:'stowed',start:'equilibrium'});
     assert.equal(previous.phase,'aircraft_only');
   }
-  assert.deepEqual(currentScenario({task:'mission'}),{task:'recovery',phase:'recovery',start:'equilibrium'});
-  assert.equal(currentScenario({task:'recovery'}).task,'recovery');
+  assert.equal(currentScenario({task:'recovery',sequence_ui_version:1}).task,'recovery');
+  assert.equal(currentScenario({task:'flight',sequence_ui_version:1}).task,'flight');
+  assert.equal('hold' in currentScenario({task:'flight',hold:null,payout:null}),false);
 });

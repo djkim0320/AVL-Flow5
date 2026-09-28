@@ -23,7 +23,12 @@ def replay_data(result,project,prepared,folder):
     from dbf_stability.math3d import rotation
     from dbf_stability.door import door_hinge
     frames=[];c=result.config;n=c['cable']['segments']
-    indices=np.unique(np.linspace(0,len(result.time)-1,min(600,len(result.time))).astype(int))
+    indices=np.linspace(0,len(result.time)-1,min(600,len(result.time))).astype(int)
+    if prepared['settings']['task']=='sequence':
+        # Keep both sides of each phase transition even in a long hold replay.
+        boundaries=[int(np.searchsorted(result.time,t)) for t in prepared['schedule'].values()]
+        indices=np.r_[indices,[i for k in boundaries for i in (k-1,k) if 0<=i<len(result.time)]]
+    indices=np.unique(indices)
     for i in indices:
         y=result.states[i];r=rotation(y[6:10]);rs=rotation(y[19:23]);k=int(result.table.active_nodes.iloc[i])
         pos=(y[13:16]-y[:3])@r;rot=r.T@rs
@@ -31,7 +36,9 @@ def replay_data(result,project,prepared,folder):
         line=np.vstack([nose,(y[26:].reshape(n,6)[:k,:3]-y[:3])@r,c['aircraft']['tow_point_m']])
         frames.append(dict(t=float(result.time[i]),sensor=pos.tolist(),quaternion=Rotation.from_matrix(rot).as_quat().tolist(),
                            aircraft_quaternion=Rotation.from_matrix(r).as_quat().tolist(),
-                           altitude_m=float(-y[2]),cable=line.tolist(),door=float(result.table.door_deg.iloc[i])))
+                           altitude_m=float(-y[2]),cable=line.tolist(),door=float(result.table.door_deg.iloc[i]),
+                           length_m=float(result.table.length_m.iloc[i]),
+                           stage=str(result.table.mission_stage.iloc[i]) if 'mission_stage' in result.table else str(result.table.phase.iloc[i])))
     write_json(folder/'replay.json',dict(frames=frames,phase=result.summary['phase'],mapping=prepared['mapping'],project_file='replay_project.json',
                   hinge=door_hinge(c['bay']).tolist(),status=result.summary['status'],
                   note=('질점 운동 계산 재생 · 구는 위치 표시용 · 형상 접촉/센서 공력 제외' if c['sensor'].get('model')=='point_mass' else '실제 계산 상태 재생 · 기체 CG 추적/지면축 고정 · 형상 간섭 감사/수렴 검증 미완료')))
@@ -90,7 +97,7 @@ def run(folder):
         trim_phase='aircraft_only' if scene_start else 'stowed' if phase=='mission' else 'deployed' if phase=='recovery' else phase
         stage(folder,'trim','힘·모멘트 평형을 계산합니다.')
         equilibrium_config=copy.deepcopy(c)
-        if task in ('flight','recovery'):
+        if task in ('flight','recovery','sequence'):
             equilibrium_config['flight']['controller']['enabled']=False
             equilibrium_config['flight']['gust']=None
             equilibrium_config['flight']['controls']={}
@@ -107,7 +114,7 @@ def run(folder):
             write_json(folder/'stability_quality.json',{k:v for k,v in summary.items()
                        if k in ('unstable','stability_status','max_real_eigenvalue_1_s','growth_time_s',
                                 'near_neutral_modes','eigenvalue_tolerance_1_s','linearization_verified','linearization_step','note')})
-        if task in ('response','mission','flight','recovery'):
+        if task in ('response','mission','flight','recovery','sequence'):
             stage(folder,'simulation','운동 방정식을 적분합니다. 수용된 시간만 진행률에 반영합니다.')
             initial=None
             if scene_start:
@@ -124,9 +131,14 @@ def run(folder):
                     q=(Rotation.from_matrix(rotation(initial[19:23]))*Rotation.from_euler('z',s['sensor_yaw_delta'],degrees=True)).as_quat()
                     initial[19:23]=np.r_[q[3],q[:3]]
             result=simulate(c,db,trim=trim,phase=phase,initial_state=initial,duration=c['simulation']['duration_s'],output=folder/'simulation')
+            if task=='sequence':
+                from mission_sequence import stage_at
+                result.table['mission_stage']=[stage_at(t,prepared['schedule']) for t in result.time]
+                result.table.to_csv(folder/'simulation/timeseries.csv',index=False)
+                summary['sequence_schedule']=prepared['schedule']
             summary.update(result.summary);summary['solver']=db.metadata['solver']
             if task=='flight':summary['stability_scope']='uncontrolled fixed-length equilibrium; controls and gusts apply to time response only'
-            if task=='recovery':
+            if task in ('recovery','sequence'):
                 final_length=float(result.table.length_m.iloc[-1])
                 summary.update(recovery_target_m=s['recovery_length'],final_length_m=final_length,
                                recovery_completed=result.summary['status']=='completed' and abs(final_length-s['recovery_length'])<1e-8)

@@ -6,10 +6,17 @@ test('point payload contains mass, never a sensor mesh',()=>{
   assert.equal(pointAsset(.12).mass_kg,.12);assert.equal('parts' in pointAsset(.12),false);
   for(const invalid of [0,-1,NaN,Infinity,11])assert.throws(()=>pointAsset(invalid));
 });
-test('length preview follows the aircraft vertical axis and winch',()=>{
-  assert.deepEqual(previewPosition([1,2,3],[0,0,0,1],2.7),[1,2,5.7]);
-  const p=previewPosition([1,2,3],[0,1,0,0],2);assert.deepEqual(p,[1,2,1]);
+test('stowed preview follows the aircraft vertical axis and winch',()=>{
+  assert.deepEqual(previewPosition([1,2,3],[0,0,0,1],2.7),[1,2,3.02]);
+  const p=previewPosition([1,2,3],[0,1,0,0],2);assert.deepEqual(p,[1,2,2.98]);
+  assert.deepEqual(previewPosition([0,0,0],[0,0,0,1],.1),[0,0,.005000000000000001]);
   assert.throws(()=>previewPosition([0,0,0],[0,0,0,1],0));
+});
+
+test('saved full-length preview is migrated without overwriting source',()=>{
+  const source={schema:'dbf-assembly/2',objects:{sensor:{...pointAsset(.12),position:[0,0,2]},winch:{position:[0,0,0]}},cable:{length_m:2}};
+  assert.deepEqual(migrateProject(source).objects.sensor.position,[0,0,.02]);
+  assert.deepEqual(source.objects.sensor.position,[0,0,2]);
 });
 test('old sensor mesh is removed, mass preserved, source untouched',()=>{
   const old={schema:'dbf-assembly/1',objects:{sensor:{parts:[{name:'old'}]},winch:{position:[0,0,0]}},cable:{length_m:2},analysis:{sensor_mass:.2}};

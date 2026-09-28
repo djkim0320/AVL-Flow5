@@ -6,7 +6,7 @@ import {resultSelection} from './result-selection.js';
 const $=id=>document.getElementById(id);
 const titles={queued:'시작 대기',running:'계산 중',completed:'계산 완료',partial:'일부 구간 계산',failed:'계산 실패',cancelled:'중단됨',interrupted:'서버 중단'};
 const stages={starting:'시작',aero:'공력 준비',trim:'트림',stability:'안정성',simulation:'시간 적분',report:'결과 작성',done:'완료'};
-const tasks={flight:'전개 비행',recovery:'회수',aero:'공력표',trim:'트림',stability:'안정성',response:'시간응답',mission:'전개·회수'};
+const tasks={sequence:'비행 → 전개 → 유지 → 회수',flight:'전개 비행 · 단독',recovery:'회수 · 단독',aero:'공력표',trim:'트림',stability:'안정성',response:'시간응답',mission:'전개·회수'};
 const phases={aircraft_only:'기체 단독',deployed:'완전 전개',recovery:'전개 상태에서 회수',stowed:'질점 고정',mission:'전체 임무'};
 async function request(url,value){const response=await fetch(url,value===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});const data=await response.json();if(!response.ok)throw new Error(data.error||'요청을 처리하지 못했습니다.');return data;}
 
@@ -20,7 +20,7 @@ export function initAnalysis({getProject,onChange,openDefinition}){
   <button type="button" id="analysis-close" class="back-button"><svg class="icon mirror" aria-hidden="true"><use href="#i-arrow"/></svg>배치 화면으로<kbd>Esc</kbd></button></nav>
   <form id="analysis-form"><p id="analysis-model" class="analysis-note">해석 모델을 확인하는 중…</p>
   <fieldset id="analysis-setup"><legend>해석 종류와 공력</legend>
-  <div class="analysis-grid"><label>해석 조건<select name="task"><option value="flight">전개 비행</option><option value="recovery">회수</option></select></label>
+  <div class="analysis-grid"><label>해석 조건<select name="task"><option value="sequence">비행 시작 → 전개 → 전개 후 비행 → 회수</option><option value="flight">전개 비행 · 안정성 단독 해석</option><option value="recovery">회수만 단독 해석</option></select></label>
   <label>공력 해석기<select name="backend"><option value="avl">MIT AVL</option><option value="flow5">flow5</option><option value="hybrid">AVL + flow5 복합</option></select></label>
   <label>계산 자원<select name="workers"><option value="12">최대 12개 CPU</option><option value="8">최대 8개 CPU</option><option value="4">최대 4개 CPU</option><option value="2">최대 2개 CPU</option><option value="1">1개 CPU</option></select></label></div>
   <label class="check"><input type="checkbox" name="rebuild">저장된 공력표 대신 실제 해석기로 다시 계산</label><p id="aero-source" class="analysis-note"></p></fieldset>
@@ -32,8 +32,12 @@ export function initAnalysis({getProject,onChange,openDefinition}){
   <div class="analysis-grid"><label>기체 추가 항력계수<input name="profile_cd" type="number" step="any" required></label></div></details></fieldset>
   <fieldset><legend>줄 물성</legend><p class="hint">질점 질량·윈치 위치·줄 길이와 직경은 배치 화면에서 가져옵니다. 질점은 형상과 회전이 없으며 중력·줄 장력만 받습니다.</p><div class="analysis-grid"><label>선밀도 · kg/m<input name="density" type="number" step="any" required></label><label>축강성 EA · N<input name="EA" type="number" step="any" required></label><label>감쇠 · N·s/m<input name="damping" type="number" step="any" required></label><label>줄 분할 수<input name="segments" type="number" step="1" required></label></div>
   <details><summary>줄 항력</summary><div class="analysis-grid"><label>수직 항력계수<input name="cd_normal" type="number" step="any" required></label><label>접선 항력계수<input name="cd_tangent" type="number" step="any" required></label></div></details></fieldset>
-  <fieldset><legend>계산 시간과 회수 조건</legend><div class="analysis-grid"><label data-scenario="flight">비행 계산 시간 · s<input name="duration" type="number" step="any" min="0.01" max="600" required></label><label data-scenario="flight">기체 피치 교란 · °<input name="pitch_delta" type="number" step="any" min="-10" max="10" required></label>
-  <label data-scenario="recovery">회수 평균 속도 · m/s<input name="recovery" type="number" step="any" min="0.001" max="5" required></label><label data-scenario="recovery">회수 후 남길 줄 · m<input name="recovery_length" type="number" step="any" min="0.001" required></label></div>
+  <fieldset><legend>비행 순서와 시간</legend><div class="analysis-grid">
+  <label data-scenario="sequence">전개 전 비행 시간 · s<input name="preflight" type="number" step="any" min="0.01" max="600" required></label>
+  <label data-scenario="sequence">전개 평균 속도 · m/s<input name="payout" type="number" step="any" min="0.001" max="5" required></label>
+  <label data-scenario="sequence">전개 후 비행 시간 · s<input name="hold" type="number" step="any" min="0" max="600" required></label>
+  <label data-scenario="flight">비행 계산 시간 · s<input name="duration" type="number" step="any" min="0.01" max="600" required></label><label data-scenario="flight">기체 피치 교란 · °<input name="pitch_delta" type="number" step="any" min="-10" max="10" required></label>
+  <label data-scenario="sequence recovery">회수 평균 속도 · m/s<input name="recovery" type="number" step="any" min="0.001" max="5" required></label><label data-scenario="sequence recovery">회수 후 남길 줄 · m<input name="recovery_length" type="number" step="any" min="0.001" required></label></div>
   <p id="analysis-scope" class="analysis-note"></p><details><summary>적분·제어 설정</summary><div class="analysis-grid"><label>최대 적분 간격 · s<input name="max_step" type="number" step="any" required></label><label>적분 제한 시간 · s<input name="runtime_limit" type="number" step="1" required></label></div>
   <label class="check"><input name="controller" type="checkbox">고도·속도 제어 사용 · 시간응답에만 적용</label></details></fieldset>
   </form>
@@ -105,7 +109,7 @@ export function initAnalysis({getProject,onChange,openDefinition}){
   }
   function snapshot(){if(modelLoading)throw new Error('해석 모델을 불러오는 중입니다. 완료 후 저장하거나 실행하세요.');if(!catalog)return pending||null;const out={};for(const [key,base] of Object.entries(catalog.defaults))out[key]=advanced.read(key,base);for(const key of ['sensor_mass','sensor_cd','sensor_inertia','sensor_yaw_delta'])delete out[key];return currentScenario(out);}
   function update(){if(!catalog)return;const task=field('task').value,b=field('backend').value,db=catalog.databases[b];
-    for(const element of form.querySelectorAll('[data-scenario]')){element.hidden=element.dataset.scenario!==task;for(const input of element.querySelectorAll('input'))input.disabled=element.hidden;}
+    for(const element of form.querySelectorAll('[data-scenario]')){element.hidden=!element.dataset.scenario.split(' ').includes(task);for(const input of element.querySelectorAll('input'))input.disabled=element.hidden;}
     const selected=field('aero_job').value;
     advanced.ranges.enable(field('rebuild').checked||selected==='new');advanced.ranges.backend(b);$('hybrid-sources').hidden=b!=='hybrid';
     let gridDescription='입력한 공력 범위의 모든 조합';try{const grid=advanced.read('aero_grid',{});gridDescription=Object.values(grid).reduce((n,a)=>n*a.length,1)+'조건';}catch{}
@@ -114,6 +118,11 @@ export function initAnalysis({getProject,onChange,openDefinition}){
     if(b==='hybrid'){const c=advanced.read('aero_hybrid',{});$('aero-source').textContent+=` 정적 계수: ${c.coeff} · 조종: ${c.controls} · 회전율: ${c.rates}. flow5 VLM2 · 동체 제외 · 계산 속도 ${saved&&selected!=='new'&&!field('rebuild').checked?saved.speed:field('speed').value} m/s. 서로 다른 해석기 조합입니다.`;}
     const length=getProject().cable?.length_m,target=Number(field('recovery_length').value),speed=Number(field('recovery').value),seconds=(length-target)/speed;
     $('analysis-scope').textContent=task==='recovery'?`완전히 전개된 비행 평형에서 회수를 시작합니다. ${Number.isFinite(seconds)&&seconds>0?`예상 회수 시간 ${seconds.toFixed(2)}초. `:''}시작과 끝에서 천천히 움직이며 최대 속도는 평균의 약 1.5배입니다. 문은 현재 열린 상태를 유지하고, 지정한 줄 길이에서 계산을 마칩니다. 포획·문 닫힘은 계산하지 않습니다.`:'줄이 완전히 전개된 비행 평형, 고정 길이에서의 안정성, 지정 시간의 움직임을 함께 계산합니다. 고유값에는 제어를 적용하지 않으며, 선택한 제어·돌풍·조종 입력은 시간응답에만 적용합니다.';
+    if(task==='sequence'){
+      const before=Number(field('preflight').value),hold=Number(field('hold').value),deploy=(length-Math.min(.02,length*.05))/Number(field('payout').value),end=before+deploy+hold+seconds;
+      const valid=Number.isFinite(end)&&before>0&&hold>=0&&deploy>0&&seconds>0;
+      $('analysis-scope').textContent=`비행 시작 → 전개 → 전개 후 비행 → 회수. ${valid?`전개 시작 ${before.toFixed(2)}초 · 전개 완료 ${(before+deploy).toFixed(2)}초 · 회수 시작 ${(before+deploy+hold).toFixed(2)}초 · 종료 ${end.toFixed(2)}초. `:''}입력한 고도·속도로 비행 중인 수납 상태에서 시작하며, 구간 사이 위치·속도는 이어집니다. 전개·회수 속도는 평균값이며 최대값은 약 1.5배입니다. 이륙·포획·문 닫힘은 계산하지 않습니다.`;
+    }
   }
   function files(job){const box=$('analysis-files');box.replaceChildren();for(const [label,url] of Object.entries(job.files||{})){const a=document.createElement('a');a.href=url;a.textContent=label;a.target='_blank';a.rel='noopener';box.append(a);}}
   function renderJob(job){current=job.id;localStorage.setItem('dbf-analysis-job',current);const box=$('analysis-job');box.replaceChildren();box.dataset.state=job.state;const heading=document.createElement('h4');heading.textContent=['queued','running'].includes(job.state)?`${titles[job.state]} · ${stages[job.stage]||job.stage}`:titles[job.state]||job.state;const message=document.createElement('p');message.textContent=job.message;box.append(heading,message);const timing=document.createElement('p');timing.textContent=`${job.backend.toUpperCase()} · ${tasks[job.task]||job.task} · ${phases[job.phase]||job.phase} · 경과 ${Math.round(job.elapsed_s)}초 · 실행 ${job.id.slice(0,8)}`;box.append(timing);
@@ -143,7 +152,7 @@ export function initAnalysis({getProject,onChange,openDefinition}){
   async function submit(validateOnly){showError('');$('analysis-validation').textContent='';submitting=true;syncButtons();const revision=inputRevision;try{if(!catalog||modelLoading)throw new Error('등록 모델을 불러온 뒤 실행하세요.');const settings=snapshot();onChange?.();const project=getProject();project.analysis=settings;const payload={project,settings},isCurrent=selection.capture();const result=await request(validateOnly?'/api/analysis/validate':'/api/analysis/jobs',payload);if(validateOnly){$('analysis-validation').textContent=revision!==inputRevision?'검사 중 입력이 변경됐습니다. 현재 조건으로 다시 확인하세요.':'입력을 확인했습니다. '+(settings.task==='recovery'?`회수 시간 ${result.duration_s.toFixed(2)}초. `:'')+result.warnings.join(' ');$('analysis-validation').scrollIntoView({block:'nearest'});}else{activeId=result.id;if(isCurrent())await selection.select(result.id,result);await history();}}catch(e){if(!validateOnly||revision===inputRevision)showError(e.message);}finally{submitting=false;syncButtons();}}
   form.onsubmit=e=>{e.preventDefault();if(connectionPending||!connection?.matches_selected){showError($('connection-message').textContent||'기체와 공력 모델의 연결을 확인하세요.');return;}submit(false);};$('analysis-validate').onclick=()=>{if(form.reportValidity())submit(true);};
   form.addEventListener('change',e=>{inputRevision++;if(e.target.name==='model_id')return;if(e.target.name==='backend'&&catalog)advanced.tables(catalog,field('backend').value);update();$('analysis-validation').textContent='';onChange?.();});
-  form.addEventListener('input',e=>{inputRevision++;markInvalid();if(e.target.name?.startsWith('aero_grid.')||['recovery','recovery_length'].includes(e.target.name))update();$('analysis-validation').textContent='';if(catalog&&!e.target.name?.startsWith('reg_'))onChange?.();});
+  form.addEventListener('input',e=>{inputRevision++;markInvalid();if(e.target.name?.startsWith('aero_grid.')||['preflight','payout','hold','recovery','recovery_length'].includes(e.target.name))update();$('analysis-validation').textContent='';if(catalog&&!e.target.name?.startsWith('reg_'))onChange?.();});
   $('analysis-close').onclick=closeView;$('analysis-cancel').onclick=async()=>{const id=activeId,isCurrent=selection.capture();if(!id)return;cancelling=true;syncButtons();try{const result=await request('/api/analysis/cancel/'+id,{});if(isCurrent()&&current===id)await selection.select(id,result);await history();}catch(e){showError(e.message);}finally{cancelling=false;syncButtons();}};
   let modelRevision=0;
   async function selectModel(id,saved=null){

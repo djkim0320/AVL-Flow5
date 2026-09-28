@@ -119,7 +119,10 @@ def validate(c):
         a = np.asarray(c["winch"][name], float)
         if a.ndim != 2 or a.shape[1] != 2 or len(a)<2 or not np.isfinite(a).all() or np.any(np.diff(a[:, 0]) <= 0):
             raise ValueError(f"winch.{name}: increasing time,value rows required")
+    if 'capture_enabled' in c['winch'] and not isinstance(c['winch']['capture_enabled'],bool):
+        raise ValueError('winch.capture_enabled must be boolean')
     if c['winch'].get('door_capture_interlock',False):
+        if not c['winch'].get('capture_enabled',True):raise ValueError('Door capture interlock requires capture_enabled')
         rows=np.asarray(c['winch']['door_schedule'],float)
         closing=np.flatnonzero(np.diff(rows[:,1])<0)
         if not len(closing) or rows[closing[0],0]<c['winch']['recovery_start_s'] or np.any(np.diff(rows[closing[0]:,1])>0):

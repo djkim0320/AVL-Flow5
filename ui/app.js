@@ -217,9 +217,9 @@ function updateWire(){
     const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color:warning?wireWarning:wireColor}));wireGroup.add(line);
   }
   for(const h of crossings){const mark=new THREE.Mesh(new THREE.SphereGeometry(.003,10,8),new THREE.MeshBasicMaterial({color:wireWarning,depthTest:false}));mark.position.copy(h.point);mark.renderOrder=8;wireGroup.add(mark);}
-  $('wire-measure').textContent=`직선 거리 ${(distance*1000).toFixed(1)} mm`;
+  $('wire-measure').textContent=`시작 줄 ${(distance*1000).toFixed(1)} mm · 전개 목표 ${cable.length_m} m`;
   $('path-status').className=`path-status ${warning?'warning':'clear'}`;
-  $('path-status').textContent=short?`줄 길이가 직선 거리 ${distance.toFixed(3)} m보다 짧습니다. 길이나 배치를 수정하세요.`:crossings.length?`길이 미리보기 직선이 기체와 ${crossings.length}곳에서 겹칩니다. 실제 줄 경로나 형상 접촉을 계산한 결과는 아닙니다.`:'직선 줄과 기체 표면의 교차가 없습니다. 그림은 초기 길이 확인용이며 질점 해석에 형상 접촉은 포함되지 않습니다.';
+  $('path-status').textContent=short?`줄 길이가 직선 거리 ${distance.toFixed(3)} m보다 짧습니다. 길이나 배치를 수정하세요.`:crossings.length?`수납 위치의 짧은 줄이 기체와 ${crossings.length}곳에서 겹칩니다. 질점 해석에는 형상 접촉이 포함되지 않습니다.`:'줄을 감은 시작 상태입니다. 해석에서 목표 길이까지 전개한 뒤 유지 비행·회수를 계산합니다. 질점 해석에는 형상 접촉이 포함되지 않습니다.';
 }
 function pointerRay(event){const rect=renderer.domElement.getBoundingClientRect();mouse.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(mouse,camera);}
 function pick(event,role=null){pointerRay(event);scene.updateMatrixWorld(true);let targets=Object.values(objects).filter(Boolean).map(v=>v.group);if(role)targets=objects[role]?[objects[role].group]:[];
@@ -235,7 +235,7 @@ function addPoint(){
   if(!objects.winch)throw new Error('윈치를 먼저 추가하세요.');
   if(objects.sensor)return;
   readBasicInputs();
-  install('sensor',pointAsset(finiteInput($('point-mass').value)),[0,0,0]);syncPoint();select('sensor');remember();view();status('질점을 추가하고 줄을 자동 연결했습니다. 질점 위치는 줄 길이로 표시합니다.');
+  install('sensor',pointAsset(finiteInput($('point-mass').value)),[0,0,0]);syncPoint();select('sensor');remember();view();status('질점을 윈치 가까이 수납하고 줄을 연결했습니다. 입력한 길이는 전개 목표입니다.');
 }
 
 renderer.domElement.addEventListener('pointerdown',event=>{

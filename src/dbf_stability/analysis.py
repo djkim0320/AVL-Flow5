@@ -308,9 +308,10 @@ def simulate(config, aero, trim=None, phase="mission", initial_state=None, durat
 
 
 def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_time,initial_capture_time,stop_on_capture):
+    capture_enabled=phase=='mission' and config['winch'].get('capture_enabled',True)
     started = time.perf_counter()
     if initial_capture_time is not None:
-        if phase!='mission' or not np.isfinite(initial_capture_time) or not 0<=initial_capture_time<=start_time:
+        if not capture_enabled or not np.isfinite(initial_capture_time) or not 0<=initial_capture_time<=start_time:
             raise ValueError('Initial capture time must precede a mission restart')
         model.captured=True;model.capture_time=float(initial_capture_time)
     y = np.array(initial_state if initial_state is not None else trim["state"], float)
@@ -391,7 +392,7 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
         current = start
         while current < stop-1e-10:
             def capture(t,z):
-                if phase!="mission" or model.captured or t<config["winch"]["recovery_start_s"]:
+                if not capture_enabled or model.captured or t<config["winch"]["recovery_start_s"]:
                     return 1.
                 return model.capture_metric(t,z)
             capture.terminal=True; capture.direction=-1
@@ -401,7 +402,7 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
             if ground(current,y)<=0:
                 status='ground_contact';message='Initial state reaches ground altitude; propagation stopped.'
                 events.append({'time_s':float(current),'event':'ground_contact'});break
-            if phase=="mission" and not model.captured and current>=config["winch"]["recovery_start_s"] and model.capture_metric(current,y)<0:
+            if capture_enabled and not model.captured and current>=config["winch"]["recovery_start_s"] and model.capture_metric(current,y)<0:
                 if stop_on_capture and ground(current,y)<=0:
                     status='ground_contact';message='Initial capture pose reaches ground altitude.';break
                 if stop_on_capture and model.mesh_contact_enabled and model.clearance_metric(current,y)<=0:
@@ -412,7 +413,7 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
             local_stop=min([stop]+[t for t in model.door_transition_times() if current+1e-10<t<stop])
             try:
                 local_sensor=rotation(y[6:10]).T@(y[13:16]-y[:3])
-                contact_step=config['simulation'].get('contact_max_step_s',.003) if phase in ('mission','stowed') and abs(local_sensor[0]-config['bay']['exit_x_m'])<.8 else np.inf
+                contact_step=config['simulation'].get('contact_max_step_s',.003) if not model.point_mass and phase in ('mission','stowed') and abs(local_sensor[0]-config['bay']['exit_x_m'])<.8 else np.inf
                 from .contact_integration import checked_radau
                 sol=checked_radau(rhs_with_progress,(current,local_stop),y,model,[capture,ground],
                                       min(config['simulation']['max_step_s'],contact_step),
@@ -482,7 +483,7 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
         if limit is not None and peak>limit:
             violations.append({"quantity":column,"limit":limit,"peak":float(peak)})
     summary={"status":status,"message":message,"phase":phase,"trim":{k:v for k,v in trim.items() if k!='state'},"duration_s":float(times[-1]-start_time),"requested_duration_s":end-start_time,"start_time_s":start_time,"end_time_s":float(times[-1]),
-             "captured":bool(model.captured),"capture_status":"not_applicable" if phase!="mission" else "captured" if model.captured else "not_captured",
+             "captured":bool(model.captured),"capture_status":"not_applicable" if not capture_enabled else "captured" if model.captured else "not_captured",
              "capture_time_s":model.capture_time,"final_door_deg":float(frame.door_deg.iloc[-1]),
              "door_capture_interlock":bool(config['winch'].get('door_capture_interlock',False)),
              "door_status":"held_open_capture_required" if frame.door_interlock_active.iloc[-1] and not model.captured else "closed" if abs(frame.door_deg.iloc[-1])<1e-6 else "open_or_moving",
@@ -508,7 +509,7 @@ def _simulate(config,aero,trim,model,phase,initial_state,duration,output,start_t
     if model.point_mass:
         summary.update(payload_model='point_mass',geometry_validity='not_modelled',
                        sensor_aerodynamics='not_modelled',payload_rotational_dofs=0,
-                       contact_evaluation='not_modelled; capture is a translational compliant latch only' if phase=='mission' else 'not_modelled; no capture')
+                       contact_evaluation='not_modelled; capture is a translational compliant latch only' if capture_enabled else 'not_modelled; no capture')
         summary['limitations'][2]='Point payload has no aerodynamic load, attitude or CAD contact; marker size is visual only'
     result=SimulationResult(times,states,frame,summary,events,copy.deepcopy(config))
     if output:

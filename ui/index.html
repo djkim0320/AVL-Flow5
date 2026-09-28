@@ -78,7 +78,7 @@
           <label class="field">센서 역할 질량<span class="unit-input"><input id="point-mass" type="number" min="0.0001" max="10" step="any" value="0.04"><em>kg</em></span></label>
           <label class="field">전개할 줄 길이<span class="unit-input"><input id="wire-length" type="number" min="0.001" max="100" step="0.1" value="2.7"><em>m</em></span></label>
           <button id="add-point" class="primary full" disabled><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>질점 추가 · 줄 자동 연결</button>
-          <p class="hint">질점은 윈치 아래에 줄 길이만큼 표시됩니다. 질점의 크기는 표시용이며 실제 평형 위치는 해석에서 계산합니다.</p>
+          <p class="hint">질점은 윈치 가까이에 수납한 상태로 표시됩니다. 줄 길이는 전개 목표이며, 해석에서 전개·유지 비행·회수를 이어 계산합니다. 구의 크기는 표시용입니다.</p>
           <details><summary>줄 세부 설정</summary><label class="field">줄 직경<span class="unit-input"><input id="wire-diameter" type="number" min="0.05" max="20" step="0.1" value="1"><em>mm</em></span></label><p class="hint">줄 물성은 해석 화면에서 확인할 수 있습니다.</p></details>
           <p id="path-status" class="path-status">윈치와 질점을 추가하면 줄을 자동 연결합니다.</p>
           <p class="hint quiet">질점의 중력과 줄 장력을 계산합니다. 센서 형상·공력·회전·표면 접촉은 사용하지 않습니다.</p>

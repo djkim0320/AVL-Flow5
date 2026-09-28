@@ -54,6 +54,36 @@ class FlightRecoveryChecks(RegisteredCase):
         for cpus,expected in [(4,1),(7,3),(10,6),(14,10),(16,12),(32,12)]:
             with self.subTest(cpus=cpus):self.assertEqual(worker_limit(cpus),expected)
 
+    def test_sequence_has_four_ordered_phases_and_fixed_door(self):
+        r=self.prepared(task='sequence',preflight=2.,payout=1.,hold=60.,recovery=1.,recovery_length=.1,duration=None,pitch_delta=None)
+        c=r['config'];rows=np.array(c['winch']['length_schedule']);schedule=r['schedule']
+        self.assertEqual(r['phase'],'mission')
+        self.assertEqual(rows[0,1],.02)
+        self.assertEqual(rows[-1,1],.1)
+        self.assertTrue(np.all(np.diff(rows[:,0])>0))
+        self.assertAlmostEqual(schedule['deployed_s'],4.38)
+        self.assertAlmostEqual(schedule['recovery_s'],64.38)
+        self.assertAlmostEqual(r['duration_s'],66.68)
+        self.assertEqual(c['winch']['release_s'],2.)
+        self.assertFalse(c['winch']['capture_enabled'])
+        self.assertEqual({v for _,v in c['winch']['door_schedule']},{r['profile']['door_reference_deg']})
+        for times,sign in [((2,4.38),1),((64.38,66.68),-1)]:
+            selection=rows[(rows[:,0]>=times[0]-1e-9)&(rows[:,0]<=times[1]+1e-9)]
+            self.assertTrue(np.all(sign*np.diff(selection[:,1])>0))
+
+    def test_sequence_zero_hold_and_invalid_inputs(self):
+        r=self.prepared(task='sequence',hold=0.)
+        self.assertEqual(r['schedule']['deployed_s'],r['schedule']['recovery_s'])
+        self.assertTrue(np.all(np.diff(np.array(r['config']['winch']['length_schedule'])[:,0])>0))
+        for changes in [dict(preflight=0),dict(preflight=None),dict(payout=0),dict(hold=-1),dict(recovery_length=2.4),dict(hold=600),dict(recovery_length=.001)]:
+            with self.subTest(changes=changes),self.assertRaises(ValueError):self.prepared(task='sequence',**changes)
+
+    def test_stowed_editor_position_is_accepted(self):
+        project=copy.deepcopy(self.project)
+        project['objects']['sensor']['position']=(np.array(project['objects']['winch']['position'])+[0,0,.02]).tolist()
+        validate_project(project)
+        self.assertEqual(prepare(project,{**self.settings,'task':'sequence'})['config']['winch']['stowed_length_m'],.02)
+
 
 
 if __name__=='__main__':unittest.main()
