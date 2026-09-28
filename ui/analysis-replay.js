@@ -6,6 +6,10 @@ const base='/analysis-files/'+job+'/';$('report').href=base+'report.html';
 try{
   const read=async name=>{const r=await fetch(base+name);if(!r.ok)throw new Error('결과 파일을 읽지 못했습니다: '+name);return r.json();};
   const data=await read('replay.json'),project=await read(data.project_file||'project.json');
+  const aircraftName=project.objects.aircraft?.source?.name;
+  const modelName=data.model_name||aircraftName||'기체 이름 미기록';
+  document.querySelector('h1').textContent=modelName+' · 결과 재생';
+  document.title=modelName+' · DBF 결과 재생';
   // Transparent canvas over the themed CSS gradient (theme.css), matching the editor.
   const scene=new THREE.Scene();const host=$('scene'),css=getComputedStyle(document.documentElement),token=name=>new THREE.Color(css.getPropertyValue(name).trim());
   const camera=new THREE.PerspectiveCamera(38,1,.001,10000);camera.up.set(0,0,-1);
@@ -47,7 +51,7 @@ try{
   orbit.target.copy(center);orbit.update();orbit.addEventListener('change',()=>renderer.render(scene,camera));
   new ResizeObserver(()=>{const r=host.getBoundingClientRect();renderer.setSize(r.width,r.height);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.render(scene,camera);}).observe(host);
   $('frame').max=frames.length-1;$('frame').disabled=false;$('play').disabled=false;
-  $('message').textContent=`${data.note} · 상태: ${data.status} · ${frames.length}개 실제 상태 표본 (표본 사이 보간 없음)`;
+  $('message').textContent=`${aircraftName?'기체 파일: '+aircraftName+' · ':''}${data.note} · 상태: ${data.status} · ${frames.length}개 실제 상태 표본 (표본 사이 보간 없음)`;
   $('frame').oninput=()=>{playing=false;$('play').textContent='재생';draw(Number($('frame').value));clock=frames[at].t;};
   $('play').onclick=()=>{playing=!playing;if(playing&&at===frames.length-1){draw(0);clock=frames[0].t;}last=performance.now();$('play').textContent=playing?'일시 정지':'재생';};
   function animate(now){if(playing){clock+=(now-last)/1000*Number($('rate').value);let next=at;while(next<frames.length-1&&frames[next+1].t<=clock)next++;if(next!==at)draw(next);if(next===frames.length-1){playing=false;$('play').textContent='다시 재생';}}last=now;requestAnimationFrame(animate);}draw(0);requestAnimationFrame(animate);

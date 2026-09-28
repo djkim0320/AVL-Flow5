@@ -40,6 +40,7 @@ def replay_data(result,project,prepared,folder):
                            length_m=float(result.table.length_m.iloc[i]),
                            stage=str(result.table.mission_stage.iloc[i]) if 'mission_stage' in result.table else str(result.table.phase.iloc[i])))
     write_json(folder/'replay.json',dict(frames=frames,phase=result.summary['phase'],mapping=prepared['mapping'],project_file='replay_project.json',
+                  model_name=prepared['profile']['name'],model_id=prepared['profile']['id'],
                   hinge=door_hinge(c['bay']).tolist(),status=result.summary['status'],
                   note=('질점 운동 계산 재생 · 구는 위치 표시용 · 형상 접촉/센서 공력 제외' if c['sensor'].get('model')=='point_mass' else '실제 계산 상태 재생 · 기체 CG 추적/지면축 고정 · 형상 간섭 감사/수렴 검증 미완료')))
 
@@ -50,7 +51,7 @@ def report(folder,prepared,summary,modes=None):
     mode_table=modes.to_html(index=False,escape=True,float_format=lambda x:f'{x:.5g}') if modes is not None else ''
     text=f'''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DBF 해석 결과</title><style>body{{font:15px/1.65 'Segoe UI','Malgun Gothic',sans-serif;color:#0b1c30;background:#f8f9ff;margin:32px auto;padding:0 20px;max-width:1000px}}table{{border-collapse:collapse;width:100%;background:white}}td,th{{padding:8px;border:1px solid #dce3ed;text-align:left}}a{{color:#006194}}.note{{padding:16px;background:#fff4df}}.scroll{{overflow:auto}}iframe{{width:100%;height:820px;border:0}}h1{{font-size:24px}}</style>
-<h1>DBF 해석 결과</h1><p>{esc(prepared['settings']['task'])} · {esc(prepared['phase'])} · {esc(summary.get('solver',''))}</p>
+<h1>{esc(prepared['profile']['name'])} · 해석 결과</h1><p>{esc(prepared['settings']['task'])} · {esc(prepared['phase'])} · {esc(summary.get('solver',''))}</p>
 <p class="note">계산 결과는 가정 물성을 사용한 시험 모델의 예측입니다. 계산 완료는 수치 수렴이나 실제 기체의 안전성 판정이 아닙니다.</p>
 <p><a href="request.json">실행 조건</a> · <a href="project.json">실행 당시 배치</a> · <a href="solver.log">계산 로그</a></p><table>{rows}</table>
 <p>{esc(prepared['mapping']['sensor_start'])}</p><div class="scroll">{mode_table}</div>'''
@@ -80,7 +81,8 @@ def run(folder):
     else:db=AeroDatabase(prepared['aero_path'])
     db.assert_compatible(c)
     write_json(folder/'aero_metadata.json',db.metadata)
-    summary={'solver':db.metadata['solver'],'task':task,'phase':phase,'numerically_converged':False,'physical_validation':'unvalidated_assumption_case'}
+    summary={'solver':db.metadata['solver'],'task':task,'phase':phase,'model_name':prepared['profile']['name'],
+             'model_id':prepared['profile']['id'],'numerically_converged':False,'physical_validation':'unvalidated_assumption_case'}
     if db.metadata.get('backend')=='hybrid':summary['aero_quality']={key:db.metadata[key] for key in ('backend','composition','sources','flow5_speed_m_s','consistency','limitations','discarded')}
     if 'aero_quality' in summary:
         record=json.loads((folder/'job.json').read_text('utf8'))
