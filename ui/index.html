@@ -55,11 +55,12 @@
     <div class="pane-heading"><span>작업 순서</span><span class="caption">위에서부터 차례로</span></div>
     <ol class="steps">
       <li class="step" data-step="1" aria-current="step">
-        <div class="step-head"><b class="step-badge">1</b><div><h2>모델 불러오기</h2><p>문이 열린 기체 파일을 불러옵니다.</p></div></div>
+        <div class="step-head"><b class="step-badge">1</b><div><h2>기체 조립</h2><p>동체·날개·승강타 파일을 함께 조립합니다.</p></div></div>
         <div class="step-body">
-          <button id="load-aircraft" class="load-button"><span class="step-num" data-role="aircraft"><svg class="icon" aria-hidden="true"><use href="#i-plane"/></svg></span><span>기체 불러오기<small>STEP · STL · GLB</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-upload"/></svg></button>
+          <button id="load-aircraft" class="load-button"><span class="step-num" data-role="aircraft"><svg class="icon" aria-hidden="true"><use href="#i-plane"/></svg></span><span>기체 부품 추가<small>STEP · STL · GLB · 여러 파일 선택</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-upload"/></svg></button>
+          <button id="replace-aircraft" type="button" class="text-button">새 기체로 교체 · 기존 배치 초기화</button>
           <button id="recent-model-file" type="button" draggable="true" hidden class="recent-button" title="최근 파일을 3D 화면에 끌어놓아 다시 불러오기"></button>
-          <p class="hint">기체 파일을 3D 화면에 끌어놓아도 됩니다.</p>
+          <p class="hint">여러 파일을 한꺼번에 끌어놓아도 됩니다. 기존 기체에 추가하며 CAD 좌표를 유지합니다. 파일별 위치·회전·고정은 오른쪽 장면 목록에서 설정하세요.</p>
           <details class="import-details"><summary>파일 단위·축 설정</summary><div class="import-options"><label>파일 단위<select id="import-unit"><option value="mm">mm</option><option value="cm">cm</option><option value="m">m</option></select></label><label>파일 축<select id="import-axes"><option value="frd">X 앞 · Y 오른쪽 · Z 아래</option><option value="zup">X 앞 · Y 왼쪽 · Z 위</option><option value="aru">X 뒤 · Y 오른쪽 · Z 위</option><option value="yup">X 앞 · Y 위 · Z 오른쪽</option></select></label></div><p class="hint">STEP는 자동으로 mm로 변환합니다. STL·GLB는 파일 단위를 선택하세요.</p></details>
           <div class="step-divider"><span>새 기체라면</span></div>
           <button id="open-aircraft-definition" type="button" class="load-button"><span class="step-num" data-role="definition"><svg class="icon" aria-hidden="true"><use href="#i-cg"/></svg></span><span>기체 정의<small>부품 · 질량·CG · 공력 면 → 해석 모델 등록</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-arrow"/></svg></button>
@@ -121,6 +122,7 @@
       <div class="pane-heading"><span>선택 속성</span><span id="selection-kind" class="tag">선택 없음</span></div>
       <div class="pane-body">
         <p id="selection-name" class="selection-name">모델을 선택하세요.</p>
+        <div id="component-actions" hidden><label class="switch"><input id="component-lock" type="checkbox" role="switch"><span>선택 파일 위치 고정</span></label><div class="button-row"><button id="component-define" type="button">부품 역할 지정</button><button id="component-remove" type="button">파일 제거</button></div><p class="hint">회전 중심은 불러온 파일의 외곽 중심입니다. 배치 변경 후 공력 단면과 CG·관성을 다시 확인하세요. 승강타는 고정 꼬리날개와 함께 공력 면을 정의하고 조종면·힌지 x/c를 지정합니다.</p></div>
         <p class="select-hint">3D 화면이나 위 장면 목록에서 모델을 클릭하면 위치와 회전을 숫자로 조정할 수 있습니다.</p>
         <fieldset id="transform-fields" disabled>
           <legend>위치 <span>mm · 작업 원점</span></legend>
@@ -158,6 +160,6 @@
     <div class="pane-footnote"><span>좌표계 <strong>FRD</strong></span><span>표시 단위 <strong>mm</strong></span></div>
   </aside>
 </main>
-<input id="model-file" type="file" accept=".stl,.glb,.step,.stp" hidden><input id="project-file" type="file" accept=".json" hidden>
+<input id="model-file" type="file" accept=".stl,.glb,.step,.stp" multiple hidden><input id="project-file" type="file" accept=".json" hidden>
 <script type="module" src="app.js"></script>
 </body></html>

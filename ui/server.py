@@ -67,6 +67,8 @@ def validate_project(value):
             raise ValueError('모델 삼각형은 100만 개 이하여야 합니다.')
         if not isinstance(item.get('source'),dict) or not isinstance(item['source'].get('origin'),str):
             raise ValueError('모델 원점 정보가 없습니다.')
+        from assembly import validate_components
+        validate_components(item)
     cable=value.get('cable')
     from aircraft_definition import validate_draft
     validate_draft(value.get('aircraft_definition'),objects.get('aircraft'))

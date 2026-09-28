@@ -20,7 +20,8 @@ export function initAircraftDefinition({getAircraft,getDefinition,setDefinition,
   function bindTensor(prefix,value){for(const [i,j] of [[0,0],[1,1],[2,2],[0,1],[0,2],[1,2]])bindNumber(`${prefix}-${i}-${j}`,v=>{value[i][j]=v;value[j][i]=v;});}
   async function request(path,extra={}){const response=await fetch('/api/aircraft/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:getProject(),...extra})});const v=await response.json();if(!response.ok)throw new Error(v.error);return v;}
   async function action(fn){if(requesting)return;if(draft){commit();onSave();}requesting=true;const version=epoch;$('definition-status').textContent='처리 중…';panel.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=true);try{await fn(()=>version===epoch);}catch(e){onError(e.message);if(version===epoch)$('definition-status').textContent=e.message;}finally{requesting=false;if(version===epoch){panel.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=false);}}}
-  function open(){if(!getAircraft()){onError('기체를 먼저 불러오세요.');return;}if(!d())draft=newDefinition(getAircraft());active=true;panel.hidden=false;document.body.classList.add('defining-aircraft');render();}
+  function syncSelection(){selected=selected.filter(i=>i<d().parts.length);massPart=Math.min(massPart,Math.max(0,d().parts.length-1));surfaceIndex=Math.min(surfaceIndex,Math.max(0,d().surfaces.length-1));}
+  function open(indices){if(!getAircraft()){onError('기체를 먼저 불러오세요.');return;}if(!d())draft=newDefinition(getAircraft());if(Array.isArray(indices)){selected=[...indices];tab='parts';}syncSelection();active=true;panel.hidden=false;document.body.classList.add('defining-aircraft');render();}
   function close(){active=false;epoch++;draft=null;panel.hidden=true;document.body.classList.remove('defining-aircraft');highlight([]);editCG(null);showSurfaces([]);}
   function render(){
     if(!active||!d())return;
@@ -92,5 +93,5 @@ export function initAircraftDefinition({getAircraft,getDefinition,setDefinition,
     $('surface-sections').onchange=()=>showSurfaces(d().surfaces);
   }
   return {open,close,isActive:()=>active,pick:(index,add)=>{if(!active||requesting)return;selected=add?(selected.includes(index)?selected.filter(i=>i!==index):[...selected,index]):[index];highlight(selected);if(tab==='parts')parts();},
-    refresh:()=>{if(active){epoch++;if(!getAircraft())close();else{if(!getDefinition())draft=newDefinition(getAircraft());render();}}}};
+    refresh:()=>{if(active){epoch++;if(!getAircraft())close();else{if(!getDefinition())draft=newDefinition(getAircraft());syncSelection();render();}}}};
 }

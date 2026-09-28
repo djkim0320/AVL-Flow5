@@ -8,17 +8,18 @@ import {pointAsset,previewPosition,migrateProject} from './point-mass.js';
 import {initAnalysis} from './analysis-ui.js';
 import {initAircraftDefinition} from './aircraft-definition-ui.js';
 import {localFromWorld,worldFromLocal,onCenterline,quarterTurn,applyMatrix,reorientAsset,isBlankDefinition} from './aircraft-model.js';
+import {validateComponents,appendComponents,moveComponent,removeComponent,reviseDefinition,importBatch} from './aircraft-assembly.js';
 
 const $ = id => document.getElementById(id);
 const names = {aircraft:'기체',sensor:'질점',winch:'윈치'};
 const colors = {aircraft:'#b3c9d2',sensor:'#d69c43',winch:'#577b8c'};
 const objects = {aircraft:null,sensor:null,winch:null};
-let selected=null, pendingRole=null, drag=null, lastPointer=null;
+let selected=null, selectedComponent=null, pendingRole=null, drag=null, lastPointer=null;
 let cable={diameter_m:.001,length_m:2.7,attachment:null};
 let undoStack=[], redoStack=[], busy=false, savingTimer=null, draftDB=null, dirty=false;
 let analysisUI=null;
 let aircraftDefinition=null,definitionUI=null,cgCallback=null;
-let recentModelFile=null;
+let recentModelFiles=[];
 const viewport=$('viewport'), ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
 // The canvas is transparent; the viewport's CSS gradient (theme.css) is the scene background.
 const scene=new THREE.Scene();
@@ -69,7 +70,17 @@ function updateFlow(){
   let speed=null;try{speed=analysisUI?.snapshot()?.speed;}catch{}
   flowLabel.textContent=`공기 흐름 · 기체 +X → −X${Number.isFinite(speed)?` · ${speed} m/s`:''}`;
 }
-function highlightParts(indices){objects.aircraft?.group.children.forEach(m=>{if(m.material?.emissive)m.material.emissive.set(indices.includes(m.userData.part)?'#285faf':'#000000');});render();}
+function highlightParts(indices){objects.aircraft?.group.traverse(m=>{if(m.material?.emissive)m.material.emissive.set(indices.includes(m.userData.part)?'#285faf':'#000000');});render();}
+function componentRecord(){return selected==='aircraft'?objects.aircraft?.asset.components?.find(c=>c.id===selectedComponent):null;}
+function selectionGroup(){return componentRecord()?objects.aircraft.componentGroups.get(selectedComponent):objects[selected]?.group;}
+function commitComponent(){
+  const c=componentRecord(),g=selectionGroup();if(!c||!g)return;
+  if(c.position.every((v,i)=>Math.abs(v-g.position.toArray()[i])<1e-12)&&c.quaternion.every((v,i)=>Math.abs(v-g.quaternion.toArray()[i])<1e-12))return;
+  const a=objects.aircraft,result=moveComponent(a.asset,c.id,g.position.toArray(),g.quaternion.toArray());
+  aircraftDefinition=reviseDefinition(aircraftDefinition,result.asset,{affected:result.affected,delta:result.delta});
+  install('aircraft',result.asset,a.group.position.toArray(),a.group.quaternion.toArray());wireSignature='';select('aircraft',c.id);definitionUI?.refresh();
+  status('파일 배치를 변경했습니다. 영향받은 공력 단면과 전체 CG·관성을 다시 입력한 뒤 새 버전으로 등록하세요.');
+}
 function editCG(point,callback){
   transform.detach();cgCallback=callback||null;cgHandle.visible=!!point;
   transform.setSpace(point?'local':'world');
@@ -95,13 +106,13 @@ function status(message){$('status').textContent=message;}
 function error(message){$('error').textContent=message;$('error').hidden=!message;if(document.body.dataset.view==='analysis')analysisUI?.showError(message);}
 function setBusy(value,message='모델을 불러오는 중…'){busy=value;$('busy').hidden=!value;$('busy-text').textContent=message;viewport.setAttribute('aria-busy',String(value));document.querySelectorAll('button,input,select').forEach(b=>{if(value){b.dataset.wasDisabled=String(b.disabled);b.disabled=true;}else if(b.dataset.wasDisabled){b.disabled=b.dataset.wasDisabled==='true';delete b.dataset.wasDisabled;}});if(!value){refresh();analysisUI?.refreshState();}}
 async function task(fn,message){if(busy)return;error('');setBusy(true,message);try{await fn();}catch(e){error(e.message || '처리하지 못했습니다. 다시 시도해 주세요.');}finally{setBusy(false);}}
-function render(){if(selectionBox && selected && objects[selected])selectionBox.setFromObject(objects[selected].group);if(typeof cgHandle!=='undefined'){cgLabel.hidden=!cgHandle.visible;if(cgHandle.visible){const p=cgHandle.position.clone().project(camera);cgLabel.style.left=`${(p.x+1)*viewport.clientWidth/2+12}px`;cgLabel.style.top=`${(1-p.y)*viewport.clientHeight/2+12}px`;}}
+function render(){if(selectionBox && selectionGroup())selectionBox.setFromObject(selectionGroup());if(typeof cgHandle!=='undefined'){cgLabel.hidden=!cgHandle.visible;if(cgHandle.visible){const p=cgHandle.position.clone().project(camera);cgLabel.style.left=`${(p.x+1)*viewport.clientWidth/2+12}px`;cgLabel.style.top=`${(1-p.y)*viewport.clientHeight/2+12}px`;}}
   if(typeof flowGroup!=='undefined'&&flowGroup.visible&&objects.aircraft){const g=objects.aircraft.group;flowGroup.position.copy(g.position);flowGroup.quaternion.copy(g.quaternion);flowGroup.updateMatrixWorld(true);const p=flowGroup.localToWorld(flowLabelLocal.clone()).project(camera),inside=p.z<1&&Math.abs(p.x)<1.1&&Math.abs(p.y)<1.1;flowLabel.hidden=!inside;if(inside){flowLabel.style.left=`${(p.x+1)*viewport.clientWidth/2}px`;flowLabel.style.top=`${(1-p.y)*viewport.clientHeight/2}px`;}}
   renderer.render(scene,camera);}
 const observer=new ResizeObserver(()=>{const {width,height}=viewport.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/Math.max(height,1);camera.updateProjectionMatrix();render();});observer.observe(viewport);
 orbit.addEventListener('change',render);
 transform.addEventListener('change',render);
-transform.addEventListener('dragging-changed',event=>{orbit.enabled=!event.value;if(!event.value){if(transform.object===cgHandle&&cgCallback){cgCallback(localFromWorld(cgHandle.position.toArray(),objects.aircraft.group.position.toArray(),objects.aircraft.group.quaternion.toArray()));status('CG 위치를 변경했습니다. 새 버전 등록 후 해석에 적용됩니다.');}else{remember();status('위치를 변경했습니다.');}}});
+transform.addEventListener('dragging-changed',event=>{orbit.enabled=!event.value;if(!event.value){if(transform.object===cgHandle&&cgCallback){cgCallback(localFromWorld(cgHandle.position.toArray(),objects.aircraft.group.position.toArray(),objects.aircraft.group.quaternion.toArray()));status('CG 위치를 변경했습니다. 새 버전 등록 후 해석에 적용됩니다.');}else{commitComponent();remember();if(!selectedComponent)status('위치를 변경했습니다.');}}});
 transform.addEventListener('objectChange',()=>{refreshInspector();updateWire();render();});
 
 function disposeTree(root){root.traverse(o=>{o.geometry?.dispose();const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m?.dispose());});}
@@ -115,6 +126,7 @@ function validateAsset(asset){
     triangles+=p.indices.length/3;
   }
   if(triangles>1000000)throw new Error('삼각형이 100만 개를 넘습니다. 표시용 메시를 줄여 다시 불러와 주세요.');
+  validateComponents(asset);
   return asset;
 }
 function install(role,asset,position,quaternion=[0,0,0,1]){
@@ -122,24 +134,30 @@ function install(role,asset,position,quaternion=[0,0,0,1]){
   if(selected===role)transform.detach();
   if(objects[role]){scene.remove(objects[role].group);disposeTree(objects[role].group);}
   const group=new THREE.Group();group.name=role;group.userData.role=role;
+  const componentGroups=new Map(),partComponents=new Map();
+  for(const c of asset.components||[]){const child=new THREE.Group();child.name=c.name;child.position.fromArray(c.position);child.quaternion.fromArray(c.quaternion);child.userData={role,component:c.id};group.add(child);componentGroups.set(c.id,child);for(const index of c.parts)partComponents.set(index,c.id);}
   asset.id ||= crypto.randomUUID();
   if(asset.kind==='point_mass'){const marker=new THREE.Mesh(new THREE.SphereGeometry(.025,16,12),new THREE.MeshStandardMaterial({color:colors.sensor,roughness:.65}));marker.userData={role};group.add(marker);}
   for(const [i,part] of (asset.parts||[]).entries()){
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(part.positions,3));geometry.setIndex(part.indices);geometry.computeVertexNormals();geometry.computeBoundingSphere();
+    const component=partComponents.get(i),parent=componentGroups.get(component)||group;
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(part.positions,3));geometry.setIndex(part.indices);
+    if(component){parent.updateMatrix();geometry.applyMatrix4(parent.matrix.clone().invert());}
+    geometry.computeVertexNormals();geometry.computeBoundingSphere();
     const material=new THREE.MeshStandardMaterial({color:part.color||colors[role],roughness:.65,metalness:.12,side:THREE.DoubleSide});
-    const mesh=new THREE.Mesh(geometry,material);mesh.name=part.name;mesh.userData={role,part:i};group.add(mesh);
+    const mesh=new THREE.Mesh(geometry,material);mesh.name=part.name;mesh.userData={role,part:i,component};parent.add(mesh);
   }
   group.position.fromArray(position);group.quaternion.fromArray(quaternion).normalize();scene.add(group);group.updateMatrixWorld(true);
-  objects[role]={asset,group};applyXray();
+  objects[role]={asset,group,componentGroups};applyXray();
 }
-function remove(role){if(!objects[role])return;if(selected===role){selected=null;transform.detach();}scene.remove(objects[role].group);disposeTree(objects[role].group);objects[role]=null;}
-function select(role){
-  selected=objects[role]?role:null;transform.detach();
+function remove(role){if(!objects[role])return;if(selected===role){selected=null;selectedComponent=null;transform.detach();}scene.remove(objects[role].group);disposeTree(objects[role].group);objects[role]=null;}
+function select(role,component=null){
+  selected=objects[role]?role:null;selectedComponent=role==='aircraft'&&objects.aircraft?.componentGroups.has(component)?component:null;transform.detach();
   if(selectionBox){scene.remove(selectionBox);selectionBox.dispose();selectionBox=null;}
   if(selected){
-    selectionBox=new THREE.BoxHelper(objects[selected].group,0x4c9aff);selectionBox.material.depthTest=false;selectionBox.material.transparent=true;selectionBox.material.opacity=.65;scene.add(selectionBox);
+    selectionBox=new THREE.BoxHelper(selectionGroup(),0x4c9aff);selectionBox.material.depthTest=false;selectionBox.material.transparent=true;selectionBox.material.opacity=.65;scene.add(selectionBox);
     // Aircraft orientation is changed only by the 90° CAD turns (the analysis frame), never by a display rotation.
-    if(selected!=='sensor'&&(selected!=='aircraft'||!$('aircraft-lock').checked&&transform.getMode()!=='rotate'))transform.attach(objects[selected].group);
+    if(componentRecord()){if(!componentRecord().locked)transform.attach(selectionGroup());}
+    else if(selected!=='sensor'&&(selected!=='aircraft'||!$('aircraft-lock').checked&&transform.getMode()!=='rotate'))transform.attach(objects[selected].group);
   }
   refresh();render();
 }
@@ -147,9 +165,13 @@ function refresh(){
   const count=Object.values(objects).filter(Boolean).length;$('object-count').textContent=`${count}개`;$('object-empty').hidden=count>0;$('empty-scene').hidden=count>0;
   const list=$('object-list');list.replaceChildren();
   for(const [role,entry] of Object.entries(objects))if(entry){
-    const b=document.createElement('button');b.className='object-item';b.setAttribute('aria-pressed',String(selected===role));b.dataset.role=role;b.disabled=busy;
+    const b=document.createElement('button');b.className='object-item';b.setAttribute('aria-pressed',String(selected===role&&!selectedComponent));b.dataset.role=role;b.disabled=busy;
     const swatch=document.createElement('span');swatch.className='swatch';swatch.style.background=colors[role];
     const text=document.createElement('span');text.textContent=names[role];const small=document.createElement('small');small.textContent=entry.asset.source?.name||names[role];text.append(small);b.append(swatch,text);b.onclick=()=>select(role);list.append(b);
+    if(role==='aircraft')for(const c of entry.asset.components||[]){
+      const child=document.createElement('button');child.className='object-item component-item';child.setAttribute('aria-pressed',String(selectedComponent===c.id));child.disabled=busy;
+      const label=document.createElement('span');label.textContent=c.name;const count=document.createElement('small');count.textContent=`${c.parts.length}개 부품${c.locked?' · 고정':''}`;label.append(count);child.append(label);child.onclick=()=>select('aircraft',c.id);list.append(child);
+    }
   }
   $('add-winch').disabled=busy||!!objects.winch;
   $('add-point').disabled=busy||!objects.winch||!!objects.sensor;
@@ -162,20 +184,23 @@ function refresh(){
   refreshInspector();updateWire();updateFlow();
 }
 function refreshInspector(){
-  $('selection-kind').dataset.role=selected||'';
-  const entry=objects[selected];$('selection-kind').textContent=entry?names[selected]:'선택 없음';
+  const component=componentRecord();
+  $('selection-kind').dataset.role=component?'component':selected||'';
+  const entry=objects[selected];$('selection-kind').textContent=component?'조립 부품':entry?names[selected]:'선택 없음';
   // Role first; the source name is secondary.
-  $('selection-name').textContent=entry?names[selected]:'모델을 선택하세요.';
-  if(entry?.asset.source?.name){const from=document.createElement('small');from.textContent=(selected==='winch'?'형상 · ':selected==='aircraft'?'파일 · ':'')+entry.asset.source.name;$('selection-name').append(from);}
-  if(selected==='aircraft'&&entry){const turns=entry.asset.source?.orientation_turns||[];$('orient-state').textContent=turns.length?`보정됨 · ${turns.join(' → ')}`:'보정 없음 · 파일 방향 그대로';$('orient-state').dataset.corrected=String(!!turns.length);
+  $('selection-name').textContent=component?component.name:entry?names[selected]:'모델을 선택하세요.';
+  if(entry?.asset.source?.name){const from=document.createElement('small');from.textContent=component?'기체에 속한 파일 · 위치는 파일 중심 / 기체 원점 기준':(selected==='winch'?'형상 · ':selected==='aircraft'?'파일 · ':'')+entry.asset.source.name;$('selection-name').append(from);}
+  $('component-actions').hidden=!component;
+  if(component)$('component-lock').checked=component.locked;
+  if(selected==='aircraft'&&entry&&!component){const turns=entry.asset.source?.orientation_turns||[];$('orient-state').textContent=turns.length?`보정됨 · ${turns.join(' → ')}`:'보정 없음 · 파일 방향 그대로';$('orient-state').dataset.corrected=String(!!turns.length);
     const q=entry.group.quaternion;$('reset-aircraft-pose').hidden=Math.abs(q.w)>1-1e-9;}
-  $('transform-fields').disabled=busy||!entry||selected==='sensor'||(selected==='aircraft'&&$('aircraft-lock').checked);
+  $('transform-fields').disabled=busy||!entry||selected==='sensor'||(component?component.locked:selected==='aircraft'&&$('aircraft-lock').checked);
   if(!entry){
     for(const id of ['px','py','pz','rx','ry','rz'])$(id).value='';
     $('selection-size').textContent='모델을 선택하면 외곽 크기가 표시됩니다.';
     return;
   }
-  const g=entry.group,e=new THREE.Euler().setFromQuaternion(g.quaternion,'XYZ');
+  const g=selectionGroup(),e=new THREE.Euler().setFromQuaternion(g.quaternion,'XYZ');
   ['px','py','pz'].forEach((id,i)=>{if(document.activeElement!==$(id))$(id).value=(g.position.getComponent(i)*1000).toFixed(2);});
   ['rx','ry','rz'].forEach((id,i)=>{if(document.activeElement!==$(id))$(id).value=THREE.MathUtils.radToDeg([e.x,e.y,e.z][i]).toFixed(2);});
   if(selected==='sensor'){$('selection-size').textContent=`질량 ${entry.asset.mass_kg} kg · 점의 크기는 표시용입니다.`;return;}
@@ -183,7 +208,7 @@ function refreshInspector(){
   $('selection-size').textContent=`외곽 크기 ${bounds.toArray().map(v=>(v*1000).toFixed(1)).join(' × ')} mm${selected==='winch'?' · 파란 점이 줄 출구입니다.':''}`;
 }
 function applyXray(){objects.aircraft?.group.traverse(o=>{if(o.isMesh){o.material.transparent=$('xray').checked;o.material.opacity=$('xray').checked?.17:1;o.material.depthWrite=!$('xray').checked;}});render();}
-function snapshot(){syncPoint();return {aircraft_definition:structuredClone(aircraftDefinition),objects:Object.fromEntries(Object.entries(objects).map(([k,v])=>[k,v?{asset:v.asset.kind==='point_mass'?{...v.asset}:v.asset,position:v.group.position.toArray(),quaternion:v.group.quaternion.toArray()}:null])),cable:structuredClone(cable),selected,locked:$('aircraft-lock').checked};}
+function snapshot(){syncPoint();return {aircraft_definition:structuredClone(aircraftDefinition),objects:Object.fromEntries(Object.entries(objects).map(([k,v])=>[k,v?{asset:v.asset.kind==='point_mass'?{...v.asset}:v.asset,position:v.group.position.toArray(),quaternion:v.group.quaternion.toArray()}:null])),cable:structuredClone(cable),selected,selectedComponent,locked:$('aircraft-lock').checked};}
 function signature(s){return JSON.stringify({...s,objects:Object.fromEntries(Object.entries(s.objects).map(([k,v])=>[k,v?{asset:v.asset.id,mass_kg:v.asset.mass_kg,position:v.position,quaternion:v.quaternion}:null]))});}
 function remember(){const s=snapshot();if(undoStack.length&&signature(undoStack.at(-1))===signature(s))return;undoStack.push(s);if(undoStack.length>40)undoStack.shift();redoStack=[];dirty=true;queueDraft();refresh();render();}
 function restore(s,replaceAssets=false){
@@ -192,7 +217,7 @@ function restore(s,replaceAssets=false){
   cable=structuredClone(s.cable);$('aircraft-lock').checked=s.locked??true;
   $('wire-diameter').value=cable.diameter_m*1000;$('wire-length').value=cable.length_m;
   if(objects.sensor)$('point-mass').value=objects.sensor.asset.mass_kg;
-  select(s.selected);refresh();definitionUI?.refresh();render();
+  select(s.selected,s.selectedComponent);refresh();definitionUI?.refresh();render();
 }
 function undo(){if(undoStack.length<2)return;redoStack.push(undoStack.pop());restore(undoStack.at(-1));queueDraft();status('이전 배치로 되돌렸습니다.');}
 function redo(){if(!redoStack.length)return;const s=redoStack.pop();undoStack.push(s);restore(s);queueDraft();status('배치를 다시 적용했습니다.');}
@@ -242,24 +267,25 @@ renderer.domElement.addEventListener('pointerdown',event=>{
   lastPointer={x:event.clientX,y:event.clientY};
   if(event.button!==0||busy||transform.axis)return;
   if(definitionUI?.isActive()){const h=pick(event,'aircraft');if(h){definitionUI.pick(h.object.userData.part,event.shiftKey);event.stopImmediatePropagation();}return;}
-  const hit=pick(event);if(!hit)return;const role=hit.object.userData.role;select(role);
-  if(role==='sensor'||role==='aircraft'&&$('aircraft-lock').checked)return;
+  const hit=pick(event);if(!hit)return;const role=hit.object.userData.role;select(role,hit.object.userData.component);
+  if(role==='sensor'||(componentRecord()?componentRecord().locked:role==='aircraft'&&$('aircraft-lock').checked))return;
   if(transform.getMode()==='rotate')return;
-  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),objects[role].group.position);
+  const target=selectionGroup(),world=target.getWorldPosition(new THREE.Vector3());
+  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),world);
   pointerRay(event);const point=ray.ray.intersectPlane(plane,new THREE.Vector3());if(!point)return;
-  drag={role,plane,offset:objects[role].group.position.clone().sub(point),start:objects[role].group.position.clone(),x:event.clientX,y:event.clientY,moved:false,id:event.pointerId};
+  drag={role,target,plane,offset:world.sub(point),start:target.position.clone(),x:event.clientX,y:event.clientY,moved:false,id:event.pointerId};
   event.stopImmediatePropagation();orbit.enabled=false;renderer.domElement.setPointerCapture(event.pointerId);
 },true);
 renderer.domElement.addEventListener('pointermove',event=>{
-  if(drag){pointerRay(event);const point=ray.ray.intersectPlane(drag.plane,new THREE.Vector3());if(point&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>2){drag.moved=true;objects[drag.role].group.position.copy(point).add(drag.offset);refreshInspector();updateWire();render();}event.stopImmediatePropagation();return;}
+  if(drag){pointerRay(event);const point=ray.ray.intersectPlane(drag.plane,new THREE.Vector3());if(point&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>2){drag.moved=true;drag.target.position.copy(drag.target.parent.worldToLocal(point.add(drag.offset)));refreshInspector();updateWire();render();}event.stopImmediatePropagation();return;}
 
 },true);
-function finishDrag(event,cancel=false){if(!drag)return;const d=drag;drag=null;if(cancel)objects[d.role].group.position.copy(d.start);orbit.enabled=true;if(renderer.domElement.hasPointerCapture(d.id))renderer.domElement.releasePointerCapture(d.id);event?.stopImmediatePropagation();if(d.moved&&!cancel)remember();else {refresh();render();}}
+function finishDrag(event,cancel=false){if(!drag)return;const d=drag;drag=null;if(cancel)d.target.position.copy(d.start);orbit.enabled=true;if(renderer.domElement.hasPointerCapture(d.id))renderer.domElement.releasePointerCapture(d.id);event?.stopImmediatePropagation();if(d.moved&&!cancel){commitComponent();remember();}else {refresh();render();}}
 renderer.domElement.addEventListener('pointerup',e=>finishDrag(e),true);renderer.domElement.addEventListener('pointercancel',e=>finishDrag(e,true),true);
 renderer.domElement.addEventListener('contextmenu',event=>event.preventDefault());
 
 function view(kind='all'){
-  const entries=kind==='focus'&&selected?[objects[selected]]:Object.values(objects).filter(Boolean);if(!entries.length)return;
+  const entries=kind==='focus'&&selected?[{group:selectionGroup()}]:Object.values(objects).filter(Boolean);if(!entries.length)return;
   const bounds=new THREE.Box3();entries.forEach(o=>bounds.expandByObject(o.group));if(kind!=='focus'&&flowGroup.visible)bounds.expandByObject(flowGroup);const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const radius=Math.max(size.length()/2,.015),distance=radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.2/Math.min(camera.aspect,1);
   const direction=kind==='side'?new THREE.Vector3(0,-1,0):kind==='top'?new THREE.Vector3(0,0,-1):kind==='rear'?new THREE.Vector3(-1,0,0):new THREE.Vector3(-1.4,-1.2,-.8).normalize();
@@ -303,7 +329,7 @@ function geometryPart(geometry,name,matrix=new THREE.Matrix4()){
   const g=geometry.clone().applyMatrix4(matrix),p=g.getAttribute('position');if(!p)throw new Error('모델에 표면 좌표가 없습니다.');
   const positions=Array.from(p.array),indices=g.index?Array.from(g.index.array):Array.from({length:p.count},(_,i)=>i);g.dispose();return {name,positions,indices};
 }
-async function loadModel(file,role){
+async function readModel(file){
   if(file.size>64*1024**2)throw new Error('64 MB 이하의 파일을 선택해 주세요.');
   const extension=file.name.split('.').at(-1).toLowerCase(),buffer=await file.arrayBuffer();let parts;
   if(extension==='stl'){try{const geometry=new STLLoader().parse(buffer);parts=[geometryPart(geometry,file.name)];geometry.dispose();}catch(e){throw new Error('STL 표면을 읽지 못했습니다. 파일이 손상되지 않았는지 확인한 뒤 다시 내보내 주세요.');}}
@@ -320,33 +346,46 @@ async function loadModel(file,role){
   const center=new THREE.Vector3();
   const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer)),b=>b.toString(16).padStart(2,'0')).join('');
   const asset=validateAsset({parts,source:{name:file.name,units:unit,axes,sha256:sha,source_origin_shift_m:center.toArray(),origin:'file_origin'}});
-  // A different airframe must not inherit the previous winch/payload placement.
-  if(role==='aircraft'){definitionUI?.close();aircraftDefinition=null;remove('sensor');remove('winch');cable.attachment=null;}
-  install(role,asset,[0,0,0]);select(role);remember();view();status(`${file.name}을 불러왔습니다. 치수를 확인하고, 청록색 공기 흐름 화살표가 기체 코 쪽에서 오는지 확인하세요. 아니면 기체를 선택해 방향을 보정하세요.`);$('scene-badge').textContent='사용자 모델 · 배치 편집';
-  recentModelFile=file;$('recent-model-file').hidden=false;$('recent-model-file').textContent=file.name+' · 다시 끌어넣기';
+  return asset;
+}
+async function loadModels(files,replace=false){
+  if(!files.length)return;
+  if(files.length>100)throw new Error('한 번에 100개 이하 파일을 선택하세요.');
+  const assets=await importBatch(files,readModel,2),old=objects.aircraft,base=replace?null:old?.asset;
+  const asset=validateAsset(appendComponents(base,assets));
+  // Commit once after every conversion succeeds; no partial assembly on error.
+  definitionUI?.close();
+  if(replace){aircraftDefinition=null;remove('sensor');remove('winch');cable.attachment=null;}
+  else aircraftDefinition=reviseDefinition(aircraftDefinition,asset,{topology:true});
+  install('aircraft',asset,base?old.group.position.toArray():[0,0,0],base?old.group.quaternion.toArray():[0,0,0,1]);
+  select('aircraft',asset.components.at(-1).id);wireSignature='';remember();view();
+  status(`${files.length}개 파일을 ${replace?'새 기체로 불러왔습니다':'조립체에 추가했습니다'}. CAD 원점은 유지합니다. 오른쪽 파일을 선택해 이동·회전하거나 기체 정의에서 역할을 지정하세요.`);
+  $('scene-badge').textContent='사용자 조립체 · 배치 편집';
+  recentModelFiles=[...files];$('recent-model-file').hidden=false;$('recent-model-file').textContent=`${files[0].name}${files.length>1?` 외 ${files.length-1}개`:''} · 다시 추가`;
 }
 
-function project({includeAnalysis=true}={}){readBasicInputs();syncPoint();return {schema:'dbf-assembly/2',units:'m',axes:'FRD',aircraft_definition:structuredClone(aircraftDefinition),saved_at:new Date().toISOString(),objects:Object.fromEntries(Object.entries(objects).map(([role,v])=>[role,v?{...v.asset,position:v.group.position.toArray(),quaternion:v.group.quaternion.toArray()}:null])),cable:structuredClone(cable),view:{selected,aircraft_locked:$('aircraft-lock').checked},...(includeAnalysis?{analysis:analysisUI?.snapshot()}:{})};}
+function project({includeAnalysis=true}={}){readBasicInputs();syncPoint();return {schema:'dbf-assembly/2',units:'m',axes:'FRD',aircraft_definition:structuredClone(aircraftDefinition),saved_at:new Date().toISOString(),objects:Object.fromEntries(Object.entries(objects).map(([role,v])=>[role,v?{...v.asset,position:v.group.position.toArray(),quaternion:v.group.quaternion.toArray()}:null])),cable:structuredClone(cable),view:{selected,selectedComponent,aircraft_locked:$('aircraft-lock').checked},...(includeAnalysis?{analysis:analysisUI?.snapshot()}:{})};}
 async function postProject(value){const response=await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});const result=await response.json();if(!response.ok)throw new Error(result.error);return result;}
 function downloadJSON(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 async function applyProject(value){
   const legacy=value.schema==='dbf-assembly/1';value=migrateProject(value);
   if(value.schema!=='dbf-assembly/2'||value.units!=='m'||value.axes!=='FRD')throw new Error('이 편집기에서 저장한 DBF 배치 JSON을 선택해 주세요.');
   const staged={};for(const role of Object.keys(objects)){const o=value.objects[role];if(o){validateAsset(o);for(const key of ['position','quaternion'])if(!Array.isArray(o[key])||!o[key].every(Number.isFinite))throw new Error('저장된 위치 값이 올바르지 않습니다.');staged[role]={asset:{...o,id:crypto.randomUUID()},position:o.position,quaternion:o.quaternion};}else staged[role]=null;}
-  restore({objects:staged,aircraft_definition:value.aircraft_definition,cable:value.cable,selected:value.view?.selected,locked:value.view?.aircraft_locked},true);await analysisUI?.restore(value.analysis);remember();view();if(legacy)status(value.migration_note);
+  restore({objects:staged,aircraft_definition:value.aircraft_definition,cable:value.cable,selected:value.view?.selected,selectedComponent:value.view?.selectedComponent,locked:value.view?.aircraft_locked},true);await analysisUI?.restore(value.analysis);remember();view();if(legacy)status(value.migration_note);
 }
 function openDraftDB(){return new Promise((resolve,reject)=>{const request=indexedDB.open('dbf-assembly-editor',1);request.onupgradeneeded=()=>request.result.createObjectStore('projects');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
 function queueDraft(){clearTimeout(savingTimer);$('save-state').textContent='배치 변경됨';$('save-state').title='';savingTimer=setTimeout(async()=>{let value;try{value=project();}catch(e){$('save-state').textContent='입력 확인 필요 · 저장되지 않음';$('save-state').title=e.message;return;}try{draftDB ||= await openDraftDB();const tx=draftDB.transaction('projects','readwrite');tx.objectStore('projects').put(value,'draft');tx.oncomplete=()=>{$('save-state').textContent='이 브라우저에 자동 저장됨';dirty=false;};tx.onerror=()=>{$('save-state').textContent='자동 저장 실패 · 파일 저장을 사용하세요';};}catch(e){$('save-state').textContent='파일 저장을 사용하세요';}},400);}
 
 $('empty-load').onclick=()=>$('load-aircraft').click();
 $('add-winch').onclick=()=>task(addWinch,'윈치를 추가하는 중…');
-for(const role of ['aircraft'])$('load-'+role).onclick=()=>{pendingRole=role;$('model-file').click();};
-$('model-file').onchange=e=>{const file=e.target.files[0],role=pendingRole;e.target.value='';if(file)task(()=>loadModel(file,role));};
+$('load-aircraft').onclick=()=>{pendingRole='append';$('model-file').click();};
+$('replace-aircraft').onclick=()=>{pendingRole='replace';$('model-file').click();};
+$('model-file').onchange=e=>{const files=[...e.target.files],replace=pendingRole==='replace';e.target.value='';if(files.length)task(()=>loadModels(files,replace));};
 $('recent-model-file').addEventListener('dragstart',e=>{
-  if(busy||!recentModelFile){e.preventDefault();return;}
+  if(busy||!recentModelFiles.length){e.preventDefault();return;}
   e.dataTransfer.setData('application/x-dbf-recent-model','aircraft');e.dataTransfer.effectAllowed='copy';
 });
-$('recent-model-file').onclick=()=>{if(!busy&&recentModelFile)task(()=>loadModel(recentModelFile,'aircraft'));};
+$('recent-model-file').onclick=()=>{if(!busy&&recentModelFiles.length)task(()=>loadModels(recentModelFiles));};
 const isModelDrag=e=>Array.from(e.dataTransfer?.types||[]).some(t=>t==='Files'||t==='application/x-dbf-recent-model');
 viewport.addEventListener('dragover',e=>{if(!isModelDrag(e))return;e.preventDefault();e.dataTransfer.dropEffect=busy?'none':'copy';viewport.classList.toggle('file-drag-over',!busy);});
 viewport.addEventListener('dragleave',e=>{if(!viewport.contains(e.relatedTarget))viewport.classList.remove('file-drag-over');});
@@ -354,9 +393,8 @@ viewport.addEventListener('drop',e=>{
   if(!isModelDrag(e))return;e.preventDefault();viewport.classList.remove('file-drag-over');
   if(busy){error('파일을 불러오는 중입니다. 완료 후 다시 놓아 주세요.');return;}
   const files=Array.from(e.dataTransfer.files||[]);
-  if(!files.length&&e.dataTransfer.getData('application/x-dbf-recent-model')==='aircraft'&&recentModelFile)files.push(recentModelFile);
-  if(files.length!==1){error('기체 파일을 하나씩 놓아 주세요.');return;}
-  task(()=>loadModel(files[0],'aircraft'));
+  if(!files.length&&e.dataTransfer.getData('application/x-dbf-recent-model')==='aircraft')files.push(...recentModelFiles);
+  if(files.length)task(()=>loadModels(files));
 });
 // Keep files dropped outside the canvas from replacing the editor page.
 window.addEventListener('dragover',e=>{if(isModelDrag(e))e.preventDefault();});
@@ -372,11 +410,18 @@ function readBasicInputs(){
 function editBasics(){try{readBasicInputs();error('');remember();}catch(e){error(e.message);}}
 $('point-mass').oninput=$('point-mass').onchange=editBasics;
 $('undo').onclick=undo;$('redo').onclick=redo;
-$('aircraft-lock').onchange=()=>{select(selected);remember();};$('xray').onchange=()=>{applyXray();wireSignature='';updateWire();};
+$('aircraft-lock').onchange=()=>{select(selected,selectedComponent);remember();};$('xray').onchange=()=>{applyXray();wireSignature='';updateWire();};
+$('component-lock').onchange=()=>{const c=componentRecord();if(!c)return;const a=objects.aircraft;a.asset={...a.asset,id:crypto.randomUUID(),components:a.asset.components.map(v=>v.id===c.id?{...v,locked:$('component-lock').checked}:v)};select(selected,selectedComponent);remember();};
+$('component-define').onclick=()=>{const c=componentRecord();if(c){transform.detach();definitionUI.open(c.parts);}};
+$('component-remove').onclick=()=>{const c=componentRecord();if(!c||busy)return;const a=objects.aircraft,result=removeComponent(a.asset,c.id);definitionUI.close();
+  aircraftDefinition=reviseDefinition(aircraftDefinition,result.asset,{map:result.map,affected:result.affected,topology:true});
+  if(result.asset){install('aircraft',result.asset,a.group.position.toArray(),a.group.quaternion.toArray());select('aircraft');}
+  else{remove('aircraft');remove('winch');remove('sensor');cable.attachment=null;select(null);}
+  wireSignature='';remember();status('선택한 파일을 조립체에서 제거했습니다. 되돌리기로 복원할 수 있습니다. 물성과 공력 면을 다시 확인하세요.');};
 $('show-flow').onchange=()=>{updateFlow();render();};
 document.querySelectorAll('[data-turn]').forEach(b=>b.onclick=()=>{if(busy)return;error('');try{reorientAircraft(b.dataset.turn,Number(b.dataset.sign));}catch(e){error(e.message);}});
 $('reset-aircraft-pose').onclick=()=>{if(!busy)resetAircraftPose();};
-for(const id of ['px','py','pz','rx','ry','rz'])$(id).oninput=$(id).onchange=()=>{if(!selected||!objects[selected]||selected==='sensor')return;error('');try{editPoseComponent(objects[selected].group,id,$(id).value);remember();}catch(e){error(e.message);}};
+for(const id of ['px','py','pz','rx','ry','rz'])$(id).oninput=$(id).onchange=()=>{if(!selected||!objects[selected]||selected==='sensor'||componentRecord()?.locked)return;error('');try{editPoseComponent(selectionGroup(),id,$(id).value);commitComponent();remember();}catch(e){error(e.message);}};
 for(const id of ['wire-diameter','wire-length'])$(id).oninput=$(id).onchange=editBasics;
 for(const [id,kind] of [['view-all','all'],['view-side','side'],['view-top','top'],['view-rear','rear'],['focus','focus']])$(id).onclick=()=>view(kind);
 function setMode(mode){
@@ -384,8 +429,8 @@ function setMode(mode){
     if(mode==='rotate'){status('CG는 위치만 설정합니다. 분홍색 축을 드래그하세요.');return;}
     transform.setMode('translate');transform.attach(cgHandle);render();return;
   }
-  transform.setMode(mode);$('move').setAttribute('aria-pressed',String(mode==='translate'));$('rotate').setAttribute('aria-pressed',String(mode==='rotate'));select(selected);
-  if(mode==='rotate'&&selected==='aircraft')status('기체 방향은 오른쪽 선택 속성의 해석 기준 방향에서 90° 단위로 바꿉니다.');
+  transform.setMode(mode);$('move').setAttribute('aria-pressed',String(mode==='translate'));$('rotate').setAttribute('aria-pressed',String(mode==='rotate'));select(selected,selectedComponent);
+  if(mode==='rotate'&&selected==='aircraft'&&!selectedComponent)status('기체 방향은 오른쪽 선택 속성의 해석 기준 방향에서 90° 단위로 바꿉니다.');
 }
 $('move').onclick=()=>setMode('translate');$('rotate').onclick=()=>setMode('rotate');
 $('save-project').onclick=()=>task(async()=>{const value=project();await postProject(value);downloadJSON(value,'DBF_센서배치.dbf-scene.json');dirty=false;$('save-state').textContent='프로젝트 파일 저장됨';status('모델과 배치를 프로젝트 파일로 저장했습니다.');},'배치를 저장하는 중…');
@@ -395,13 +440,14 @@ $('project-file').onchange=e=>{const file=e.target.files[0];e.target.value='';if
 $('export-setup').onclick=()=>{error('');if(!objects.aircraft||!objects.sensor||!objects.winch||!cable.attachment){error('기체와 윈치를 배치하고 질점을 추가하세요.');return;}scene.updateMatrixWorld(true);const aircraftInverse=objects.aircraft.group.matrixWorld.clone().invert(),sensorMatrix=aircraftInverse.clone().multiply(objects.sensor.group.matrixWorld),p=new THREE.Vector3(),q=new THREE.Quaternion(),scale=new THREE.Vector3();sensorMatrix.decompose(p,q,scale);const start=winchPoint().applyMatrix4(aircraftInverse),end=worldAttachment().applyMatrix4(aircraftInverse);
   downloadJSON({schema:'dbf-assembly-setup/2',units:'SI',axes:'FRD',aircraft_definition:structuredClone(aircraftDefinition),analysis_ready:false,aircraft_origin:'imported model origin; CG must be specified separately',sensor:{kind:'point_mass',mass_kg:objects.sensor.asset.mass_kg,preview_position_aircraft_m:p.toArray()},winch:{feed_point_aircraft_m:start.toArray()},cable:{...cable,straight_distance_m:start.distanceTo(end)},sources:Object.fromEntries(Object.entries(objects).map(([k,v])=>[k,v.asset.source])),required_analysis_inputs:['aircraft mass, CG and inertia','aerodynamic database matching the aircraft','cable mass, stiffness, damping and drag','deployment/recovery commands; point-mass model excludes CAD contact']},'DBF_해석용배치.setup.json');status('좌표·연결점·줄 설정을 내보냈습니다. 해석 물성은 별도로 지정해야 합니다.');
 };
-window.addEventListener('keydown',e=>{if($('analysis-dialog')?.open)return;if(busy||/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName))return;if(e.key==='Escape'){if(drag)finishDrag(null,true);transform.reset();select(selected);status('현재 조작을 취소했습니다.');}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}else if(!e.ctrlKey&&!e.metaKey){if(e.key.toLowerCase()==='g')setMode('translate');if(e.key.toLowerCase()==='r')setMode('rotate');if(e.key.toLowerCase()==='f')view('focus');}});
+window.addEventListener('keydown',e=>{if($('analysis-dialog')?.open)return;if(busy||/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName))return;if(e.key==='Escape'){if(drag)finishDrag(null,true);transform.reset();select(selected,selectedComponent);status('현재 조작을 취소했습니다.');}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}else if(!e.ctrlKey&&!e.metaKey){if(e.key.toLowerCase()==='g')setMode('translate');if(e.key.toLowerCase()==='r')setMode('rotate');if(e.key.toLowerCase()==='f')view('focus');}});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 // Read-only diagnostic surface for reproducible local UI checks.
 window.dbfEditor={snapshot:()=>project(),getScreenPoint:(role,local=[0,0,0])=>{const v=objects[role]?.group.localToWorld(new THREE.Vector3().fromArray(local));if(!v)return null;v.project(camera);const r=renderer.domElement.getBoundingClientRect();return {x:r.left+(v.x+1)*r.width/2,y:r.top+(1-v.y)*r.height/2};}};
 definitionUI=initAircraftDefinition({getAircraft:()=>objects.aircraft?.asset,getDefinition:()=>aircraftDefinition,setDefinition:v=>{aircraftDefinition=v;},getProject:()=>project({includeAnalysis:false}),highlight:highlightParts,editCG,showSurfaces:showAeroSurfaces,onSave:remember,onError:error,onRegistered:async id=>{await analysisUI.useModel(id);queueDraft();await analysisUI.open();}});
-$('open-aircraft-definition').onclick=()=>definitionUI.open();
-analysisUI=initAnalysis({getProject:()=>project({includeAnalysis:false}),openDefinition:()=>definitionUI.open(),onChange:()=>{dirty=true;queueDraft();updateFlow();}});
+function openDefinition(){transform.detach();definitionUI.open();}
+$('open-aircraft-definition').onclick=openDefinition;
+analysisUI=initAnalysis({getProject:()=>project({includeAnalysis:false}),openDefinition,onChange:()=>{dirty=true;queueDraft();updateFlow();}});
 $('open-analysis').onclick=$('open-analysis-panel').onclick=()=>analysisUI.open();
 function syncThemeButton(){const light=document.documentElement.dataset.theme==='light',label=light?'어두운 화면으로 전환':'밝은 화면으로 전환';$('theme-toggle').setAttribute('aria-label',label);$('theme-toggle').title=label;}
 $('theme-toggle').onclick=()=>{const next=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=next;try{localStorage.setItem('dbf-theme',next);}catch{}syncThemeButton();applySceneTheme();render();};

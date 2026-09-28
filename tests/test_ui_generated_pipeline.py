@@ -18,7 +18,16 @@ def test_registered_point_mass_modes_and_recovery(tmp_path):
     from analysis_bridge import catalog,prepare
     original=model_registry.DIRECTORY
     try:
-        model_registry.DIRECTORY=tmp_path/'models';p=definition_fixture();record=register_definition(p)
+        model_registry.DIRECTORY=tmp_path/'models';p=definition_fixture()
+        # A multi-file assembly keeps final mesh vertices in the aircraft frame.
+        # Editing handles must not shift CG, solver references, or replay again.
+        p['objects']['aircraft']['components']=[
+            dict(id=str(i),name=part['name']+'.step',source=dict(origin='file_origin'),
+                 parts=[i],position=[i*4.,1.,2.],quaternion=[0.,0.,0.,1.],locked=True)
+            for i,part in enumerate(p['objects']['aircraft']['parts'])]
+        from server import validate_project
+        validate_project(p)
+        record=register_definition(p)
         settings=catalog(record['id'])['defaults'];length=p['cable']['length_m'];target=.75*length
         settings.update(task='recovery',recovery_length=target,recovery=1.,segments=4,workers=2,
                         aero_grid=dict(alpha_deg=[-4.,4.,12.],beta_deg=[-4.,4.],elevator_deg=[-8.,0.,8.]))

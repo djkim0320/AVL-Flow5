@@ -1,4 +1,5 @@
 // Persisted definitions use CAD-local SI/FRD coordinates, never scene coordinates.
+import {Matrix4,Quaternion} from 'three';
 export const roleLabels={unassigned:'미지정',main_wing:'주익',horizontal_tail:'수평 꼬리날개',vertical_tail:'수직 꼬리날개',fuselage:'동체',control:'조종면',door:'문',equipment:'장비·구조물',excluded:'공력 제외'};
 export const blankTensor=()=>[[null,0,0],[0,null,0],[0,0,null]];
 export function newDefinition(aircraft){
@@ -43,7 +44,13 @@ export function reorientAsset(asset,axis,sign){
   const parts=asset.parts.map(p=>{const q=new Array(p.positions.length);for(let i=0;i<q.length;i+=3){const v=applyMatrix(m,[p.positions[i],p.positions[i+1],p.positions[i+2]]);q[i]=v[0];q[i+1]=v[1];q[i+2]=v[2];}return {...p,positions:q};});
   const source={...asset.source,
     orientation_matrix:multiply(m,asset.source?.orientation_matrix||identity),orientation_turns:[...(asset.source?.orientation_turns||[]),`${axis.toUpperCase()}${sign<0?'−':'+'}90°`]};
-  const {id,...rest}=asset;return {...rest,parts,source};
+  const {id,...rest}=asset;
+  const result={...rest,parts,source};
+  if(asset.components){
+    const turn=new Quaternion().setFromRotationMatrix(new Matrix4().set(m[0][0],m[0][1],m[0][2],0,m[1][0],m[1][1],m[1][2],0,m[2][0],m[2][1],m[2][2],0,0,0,0,1));
+    result.components=asset.components.map(c=>({...c,position:applyMatrix(m,c.position),quaternion:turn.clone().multiply(new Quaternion(...c.quaternion)).normalize().toArray()}));
+  }
+  return result;
 }
 // Mirrors aircraft_definition.is_blank: a template with no role, surface, review or physical value.
 export function isBlankDefinition(d){
