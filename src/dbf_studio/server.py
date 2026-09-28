@@ -28,16 +28,47 @@ def worker_init():
     apply_affinity()
 
 
+def step_part_names(path, solids):
+    """Names of the STEP assembly nodes, one per solid in `solids` order, or None when they cannot be matched."""
+    import cadquery as cq
+
+    try:
+        assembly = cq.Assembly.importStep(str(path))
+    except Exception:
+        return None
+    named = []
+
+    def walk(node, location):
+        location = location * node.loc
+        if node.obj is not None:
+            shape = node.obj if isinstance(node.obj, cq.Shape) else node.obj.val()
+            for solid in shape.moved(location).Solids():
+                named.append((node.name, solid.Center()))
+        for child in node.children:
+            walk(child, location)
+
+    walk(assembly, cq.Location())
+    if len(named) != len(solids):
+        return None
+    names = []
+    for (name, center), solid in zip(named, solids):
+        if (center - solid.Center()).Length > 1e-3 * max(solid.BoundingBox().DiagonalLength, 1):
+            return None
+        names.append(str(name)[:120])
+    return names
+
+
 def convert_step(path):
     import cadquery as cq
 
-    work = cq.importers.importStep(str(path))
+    solids = cq.importers.importStep(str(path)).solids().vals()
+    names = step_part_names(path, solids) or [f'부품 {i + 1}' for i in range(len(solids))]
     parts = []
-    for i, solid in enumerate(work.solids().vals()):
+    for name, solid in zip(names, solids):
         vertices, faces = solid.tessellate(0.2, 0.15)
         parts.append(
             dict(
-                name=f'부품 {i + 1}',
+                name=name,
                 positions=np.array([v.toTuple() for v in vertices]).ravel().tolist(),
                 indices=np.asarray(faces, dtype=int).ravel().tolist(),
             )
