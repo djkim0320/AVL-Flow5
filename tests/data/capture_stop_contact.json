@@ -1,0 +1,25 @@
+{
+  "source_case": "test_models/H1_reference/runs/recovery_repair_08/stop_slow/case.yaml",
+  "rows": [
+    {
+      "time": 71.0159912562795,
+      "file": "test_models\\H1_reference\\runs\\recovery_repair_08\\stop_slow\\mission\\accepted_history\\part_000044.npz",
+      "sha256": "9eed604df8fc2b2aedfdf208aea3bc9a313ecba66919b667b9bdfeb37df22b91"
+    },
+    {
+      "time": 71.01898936159205,
+      "file": "test_models\\H1_reference\\runs\\recovery_repair_08\\stop_slow\\mission\\accepted_history\\part_000054.npz",
+      "sha256": "abe1f578c5a59a841942640052851a28d0fba2b7916430e0b5357b2199023759"
+    },
+    {
+      "time": 71.02499953824844,
+      "file": "test_models\\H1_reference\\runs\\recovery_repair_08\\stop_slow\\mission\\accepted_history\\part_000066.npz",
+      "sha256": "2d6fae3c53cb77d4f26c75b6791f76273e549af791b573795ffc8c03f4220074"
+    },
+    {
+      "time": 71.03697797541403,
+      "file": "test_models\\H1_reference\\runs\\recovery_repair_08\\stop_slow\\mission\\accepted_history\\part_000087.npz",
+      "sha256": "379aed16909b53741587352c8dad379f1967729c6d67a89283d8e69c69681bc5"
+    }
+  ]
+}

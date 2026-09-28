@@ -1,0 +1,8 @@
+{
+  "name": "dbf-assembly-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "three": "0.180.0" },
+  "scripts": { "check": "node --check aircraft-model.js && node --check aircraft-definition-ui.js && node --check point-mass.js && node --check app.js && node --check coordinates.js && node --check analysis-ui.js && node --check analysis-settings.js && node --check analysis-options.js && node --check result-selection.js && node --check aero-ranges.js && node --check analysis-scenarios.js && node --check analysis-replay.js", "test": "node --test tests/*.test.js" }
+}

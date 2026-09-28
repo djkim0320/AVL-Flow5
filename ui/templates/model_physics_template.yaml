@@ -1,0 +1,688 @@
+# 물리값과 출처를 채운 뒤 template_unfilled를 false로 변경하세요.
+name: ''
+aircraft:
+  mass_kg: null
+  cg_m:
+  - null
+  - null
+  - null
+  inertia_kgm2:
+  - - null
+    - null
+    - null
+  - - null
+    - null
+    - null
+  - - null
+    - null
+    - null
+  tow_point_m:
+  - null
+  - null
+  - null
+  thrust_point_m:
+  - null
+  - null
+  - null
+  profile_cd: null
+  max_thrust_N: null
+sensor:
+  model: point_mass
+  mass_kg: null
+  tow_point_m:
+  - null
+  - null
+  - null
+cable:
+  length_m: null
+  segments: null
+  density_kg_m: null
+  diameter_m: null
+  EA_N: null
+  damping_Ns_m: null
+  damping_engagement_strain: null
+  cd_normal: null
+  cd_tangent: null
+  spool_k_N_m: null
+  spool_c_Ns_m: null
+  limit_N: null
+  guide_points_body_m: []
+bay:
+  stowed_center_m:
+  - null
+  - null
+  - null
+  exit_x_m: null
+  front_x_m: null
+  half_width_m: null
+  floor_z_m: null
+  ceiling_z_m: null
+  ramp_slope: null
+  lip_depth_m: null
+  door_length_m: null
+  door_thickness_m: null
+  wall_thickness_m: null
+  contact_radius_m: null
+  release_push_N: null
+  contact_k_N_m: null
+  contact_c_Ns_m: null
+  friction: null
+  latch_k_N_m: null
+  latch_c_Ns_m: null
+  latch_kr_Nm_rad: null
+  latch_cr_Nms_rad: null
+  capture_radius_m: null
+  capture_speed_m_s: null
+  capture_angle_deg: null
+  limit_contact_N: null
+  limit_penetration_m: null
+winch:
+  stowed_length_m: null
+  radius_m: null
+  limit_torque_Nm: null
+  release_s: null
+  recovery_start_s: null
+  door_schedule:
+  - - null
+    - null
+  - - null
+    - null
+  length_schedule:
+  - - null
+    - null
+  - - null
+    - null
+flight:
+  speed_m_s: null
+  altitude_m: null
+  rho_kg_m3: null
+  g_m_s2: null
+  wind_ned_m_s:
+  - null
+  - null
+  - null
+  local_flow_factor: null
+  controls: {}
+  gust: null
+  controller:
+    enabled: false
+simulation:
+  duration_s: null
+  sample_dt_s: null
+  max_step_s: null
+  rtol: null
+  atol: null
+  maximum_runtime_s: null
+collision:
+  enabled: false
+aero:
+  executable: vendor/avl/avl.exe
+  flow5_executable: vendor/flow5/flow5.exe
+  geometry: aircraft.avl
+  backend: avl
+  elevator_index: null
+  lateral_control_indices:
+  - null
+  - null
+  moment_reference_frd_m:
+  - null
+  - null
+  - null
+  alpha_deg:
+  - null
+  - null
+  - null
+  - null
+  - null
+  beta_deg:
+  - null
+  - null
+  - null
+  elevator_deg:
+  - null
+  - null
+  - null
+provenance:
+  aircraft:
+    kind: null
+    source: null
+  sensor:
+    kind: null
+    source: null
+  cable:
+    kind: null
+    source: null
+  bay:
+    kind: null
+    source: null
+  winch:
+    kind: null
+    source: null
+  flight:
+    kind: null
+    source: null
+  aero:
+    kind: null
+    source: null
+template_unfilled: true
+field_help:
+  aircraft.mass_kg:
+    unit: kg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.cg_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.cg_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.cg_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[0][0]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[0][1]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[0][2]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[1][0]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[1][1]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[1][2]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[2][0]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[2][1]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.inertia_kgm2[2][2]:
+    unit: kg m²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.tow_point_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.tow_point_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.tow_point_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.thrust_point_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.thrust_point_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.thrust_point_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.profile_cd:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aircraft.max_thrust_N:
+    unit: N
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  sensor.mass_kg:
+    unit: kg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  sensor.tow_point_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  sensor.tow_point_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  sensor.tow_point_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.length_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.segments:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.density_kg_m:
+    unit: kg/m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.diameter_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.EA_N:
+    unit: N
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.damping_Ns_m:
+    unit: N s/m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.damping_engagement_strain:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.cd_normal:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.cd_tangent:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.spool_k_N_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  cable.spool_c_Ns_m:
+    unit: N s/m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.stowed_center_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.stowed_center_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.stowed_center_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.exit_x_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.front_x_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.half_width_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.floor_z_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.ceiling_z_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.ramp_slope:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.lip_depth_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.door_length_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.door_thickness_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.wall_thickness_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.contact_radius_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.release_push_N:
+    unit: N
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.contact_k_N_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.contact_c_Ns_m:
+    unit: N s/m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.friction:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.latch_k_N_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.latch_c_Ns_m:
+    unit: N s/m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.latch_kr_Nm_rad:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.latch_cr_Nms_rad:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.capture_radius_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.capture_speed_m_s:
+    unit: m/s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  bay.capture_angle_deg:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.stowed_length_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.radius_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.release_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.recovery_start_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.door_schedule[0][0]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.door_schedule[0][1]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.door_schedule[1][0]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.door_schedule[1][1]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.length_schedule[0][0]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.length_schedule[0][1]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.length_schedule[1][0]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  winch.length_schedule[1][1]:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.speed_m_s:
+    unit: m/s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.altitude_m:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.rho_kg_m3:
+    unit: kg/m³
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.g_m_s2:
+    unit: m/s²
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.wind_ned_m_s[0]:
+    unit: m/s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.wind_ned_m_s[1]:
+    unit: m/s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.wind_ned_m_s[2]:
+    unit: m/s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  flight.local_flow_factor:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.duration_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.sample_dt_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.max_step_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.rtol:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.atol:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  simulation.maximum_runtime_s:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.elevator_index:
+    unit: '1'
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.lateral_control_indices[0]:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.lateral_control_indices[1]:
+    unit: s
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.moment_reference_frd_m[0]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.moment_reference_frd_m[1]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.moment_reference_frd_m[2]:
+    unit: m
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.alpha_deg[0]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.alpha_deg[1]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.alpha_deg[2]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.alpha_deg[3]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.alpha_deg[4]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.beta_deg[0]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.beta_deg[1]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.beta_deg[2]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.elevator_deg[0]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.elevator_deg[1]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null
+  aero.elevator_deg[2]:
+    unit: deg
+    frame: 'FRD: forward/right/down; origin explicitly supplied'
+    source: null
+    source_kind: null

@@ -1,0 +1,16 @@
+component,quantity,value,unit,kind,source,notes
+aircraft,mass,,kg,design,,Exclude separately modelled sensor and cable
+aircraft,CG_x,,m,design,,State origin and axes
+aircraft,Ixx,,kg m2,design,,About CG
+aircraft,Iyy,,kg m2,design,,About CG
+aircraft,Izz,,kg m2,design,,About CG
+aircraft,tow_x,,m,design,,Relative to aircraft CG
+aircraft,tow_z,,m,design,,Relative to aircraft CG
+sensor,mass,,kg,design,,Include sensor internal battery
+sensor,drag_coefficient,,,assumption,,Attach analysis or measurement
+cable,linear_density,,kg/m,measured,,
+cable,EA,,N,measured,,
+winch,radius,,m,design,,
+winch,max_torque,,N m,measured,,
+capture,stiffness,,N/m,measured,,
+capture,damping,,N s/m,assumption,,

@@ -1,0 +1,703 @@
+name: R3_avl_1.5span_60s_hold
+collision:
+  parts_manifest:
+    aileron_+1_CAD_approx:
+      role: fixed
+    aileron_-1_CAD_approx:
+      role: fixed
+    capture_lower_pad:
+      role: fixed
+      box_kind: aabb
+    capture_ramp_bottom:
+      role: fixed
+      edges: true
+    capture_ramp_side_+1:
+      role: fixed
+      edges: true
+    capture_ramp_side_-1:
+      role: fixed
+      edges: true
+    capture_ramp_top:
+      role: fixed
+      edges: true
+    elevator_+1_CAD_approx:
+      role: fixed
+    elevator_-1_CAD_approx:
+      role: fixed
+    fairlead_ring:
+      role: fixed
+      concave: true
+    fuselage_H1_approx_with_rear_cutout:
+      role: fixed
+      concave: true
+    guide_ceiling:
+      role: fixed
+      box_kind: aabb
+    guide_floor:
+      role: fixed
+      box_kind: aabb
+    guide_side_+1:
+      role: fixed
+      box_kind: aabb
+    guide_side_-1:
+      role: fixed
+      box_kind: aabb
+    horizontal_tail_CAD_approx:
+      role: fixed
+    landing_strut_0:
+      role: fixed
+    landing_strut_1:
+      role: fixed
+    landing_strut_2:
+      role: fixed
+    landing_wheel_0:
+      role: fixed
+    landing_wheel_1:
+      role: fixed
+    landing_wheel_2:
+      role: fixed
+    main_wing_CAD_approx:
+      role: fixed
+    propulsion_blade_+1:
+      role: fixed
+    propulsion_blade_-1:
+      role: fixed
+    propulsion_motor:
+      role: fixed
+    propulsion_spinner:
+      role: fixed
+    rear_door_100deg:
+      role: door
+      reference_deg: 100.0
+      bay_reference_shift: true
+      box_kind: bay_door
+    rear_exit_frame:
+      role: fixed
+      decomposition: bay_aperture
+      concave: true
+    rudder_CAD_approx:
+      role: fixed
+    sensor_body:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_0:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_1:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_2:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_3:
+      role: sensor
+      coordinates: aircraft_stowed
+    vertical_fin_CAD_approx:
+      role: fixed
+    winch_drum:
+      role: fixed
+      spool: true
+    winch_motor:
+      role: fixed
+  enabled: true
+  mesh_directory: test_models/H1_reference/geometry_variants/normal_r3/meshes
+  skin_m: 0.0008
+  minimum_gap_m: 2.0e-05
+  stiffness_N_m: 20000.0
+  damping_Ns_m: 8.0
+  maximum_surface_travel_m: 0.0002
+  maximum_free_surface_travel_m: 0.002
+  clearance_query_m: 0.01
+  cable_contact_regularization_m: 0.00016
+  model: near_rigid_barrier_unvalidated_impact_loads
+  concave_parts:
+  - fairlead_ring
+aircraft:
+  mass_kg: 2.300000000000001
+  inertia_kgm2:
+  - - 0.14763337319707828
+    - 2.7753693330235888e-11
+    - -0.019290072881739263
+  - - 2.7753693330235888e-11
+    - 0.3019599749729823
+    - 4.988767784843932e-12
+  - - -0.019290072881739263
+    - 4.988767784843932e-12
+    - 0.41559178352219794
+  cg_m:
+  - -0.5049248043385347
+  - 1.5265869599533492e-11
+  - -0.021885793883408965
+  tow_point_m:
+  - -0.3150751956614652
+  - -1.5265869599533492e-11
+  - 0.04188579388340897
+  thrust_point_m:
+  - 0.42492480433853475
+  - -1.5265869599533492e-11
+  - 0.021885793883408965
+  profile_cd: 0.035
+  max_thrust_N: 30.0
+sensor:
+  mass_kg: 0.04
+  inertia_kgm2:
+  - - 4.925333333333334e-06
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 5.116106666666666e-05
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 5.116106666666666e-05
+  length_m: 0.12
+  span_m: 0.046
+  area_m2: 0.0015
+  tow_point_m:
+  - 0.0638
+  - 0.0
+  - 0.0
+  cd: 0.6
+  cy_beta: 2.0
+  cz_alpha: 2.0
+  cm_alpha: -0.35
+  cn_beta: 0.35
+  rate_damping:
+  - 1.0
+  - 3.0
+  - 3.0
+  contact_points_m:
+  - - -0.0562
+    - 0.014
+    - 0.0
+  - - -0.0562
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - -0.0562
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - -0.0562
+    - 8.572527594031473e-19
+    - 0.014
+  - - -0.0562
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - -0.0562
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - -0.0562
+    - -0.014
+    - 1.7145055188062945e-18
+  - - -0.0562
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - -0.0562
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - -0.0562
+    - -2.5717582782094414e-18
+    - -0.014
+  - - -0.0562
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - -0.0562
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - 0.0038
+    - 0.014
+    - 0.0
+  - - 0.0038
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - 0.0038
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - 0.0038
+    - 8.572527594031473e-19
+    - 0.014
+  - - 0.0038
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - 0.0038
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - 0.0038
+    - -0.014
+    - 1.7145055188062945e-18
+  - - 0.0038
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - 0.0038
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - 0.0038
+    - -2.5717582782094414e-18
+    - -0.014
+  - - 0.0038
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - 0.0038
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - 0.0638
+    - 0.014
+    - 0.0
+  - - 0.0638
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - 0.0638
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - 0.0638
+    - 8.572527594031473e-19
+    - 0.014
+  - - 0.0638
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - 0.0638
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - 0.0638
+    - -0.014
+    - 1.7145055188062945e-18
+  - - 0.0638
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - 0.0638
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - 0.0638
+    - -2.5717582782094414e-18
+    - -0.014
+  - - 0.0638
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - 0.0638
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - -0.0492
+    - 0.023
+    - 0.0
+  - - -0.0492
+    - -0.023
+    - 0.0
+  - - -0.0492
+    - 0.0
+    - 0.023
+  - - -0.0492
+    - 0.0
+    - -0.023
+  - - -0.0192
+    - 0.023
+    - 0.0
+  - - -0.0192
+    - -0.023
+    - 0.0
+  - - -0.0192
+    - 0.0
+    - 0.023
+  - - -0.0192
+    - 0.0
+    - -0.023
+cable:
+  length_m: 2.7
+  segments: 18
+  density_kg_m: 0.0015
+  diameter_m: 0.001
+  EA_N: 60.0
+  damping_Ns_m: 0.03
+  damping_engagement_strain: 0.01
+  cd_normal: 1.2
+  cd_tangent: 0.02
+  spool_k_N_m: 800
+  spool_c_Ns_m: 3.0
+  limit_N: 8.0
+bay:
+  stowed_center_m:
+  - -0.48507519566146523
+  - -1.5265869599533492e-11
+  - 0.04188579388340897
+  exit_x_m: -0.6350751956614652
+  front_x_m: -0.40507519566146527
+  half_width_m: 0.028
+  floor_z_m: 0.06988579388340897
+  ceiling_z_m: -0.00011420611659103668
+  ramp_slope: 0.0
+  lip_depth_m: 0.0
+  door_length_m: 0.07
+  door_thickness_m: 0.002
+  wall_thickness_m: 0.002
+  contact_radius_m: 0.0015
+  release_push_N: 0.12
+  contact_k_N_m: 800.0
+  contact_c_Ns_m: 2.0
+  friction: 0.1
+  latch_k_N_m: 500.0
+  latch_c_Ns_m: 5.0
+  latch_kr_Nm_rad: 0.1
+  latch_cr_Nms_rad: 0.01
+  capture_radius_m: 0.006
+  capture_speed_m_s: 0.15
+  capture_angle_deg: 8.0
+  limit_contact_N: null
+  limit_penetration_m: 0.002
+  door_hinge_offset_m:
+  - -0.003
+  - 0.0
+  - 0.003
+  door_closed_offset_m:
+  - -0.003
+  - 0.0
+  - 0.0
+  release_push_until_s: 4.135815755488593
+winch:
+  stowed_length_m: 0.10620000000000002
+  radius_m: 0.015
+  limit_torque_Nm: 0.15
+  release_s: 0.6
+  recovery_start_s: 64.1358157554886
+  door_schedule:
+  - - 0.0
+    - 0
+  - - 0.4
+    - 140
+  - - 73.71359353326636
+    - 140
+  - - 74.51359353326636
+    - 0
+  - - 74.91359353326636
+    - 0
+  length_schedule:
+  - - 0.0
+    - 0.10620000000000002
+  - - 0.1
+    - 0.10620000000000002
+  - - 0.2
+    - 0.10620000000000002
+  - - 0.30000000000000004
+    - 0.10620000000000002
+  - - 0.4
+    - 0.10620000000000002
+  - - 0.5
+    - 0.10620000000000002
+  - - 0.6
+    - 0.10620000000000002
+  - - 0.7860955660783472
+    - 0.12699880449045056
+  - - 0.9721911321566941
+    - 0.18636993730864565
+  - - 1.158286698235041
+    - 0.27977547747485065
+  - - 1.344382264313388
+    - 0.40267750400933094
+  - - 1.5304778303917352
+    - 0.5505380959323518
+  - - 1.7165733964700824
+    - 0.7188193322641789
+  - - 1.9026689625484292
+    - 0.9029832920250769
+  - - 2.0887645286267764
+    - 1.0984920542353116
+  - - 2.274860094705123
+    - 1.3008076979151486
+  - - 2.46095566078347
+    - 1.5053923020848525
+  - - 2.647051226861817
+    - 1.7077079457646893
+  - - 2.8331467929401644
+    - 1.9032167079749245
+  - - 3.0192423590185116
+    - 2.087380667735822
+  - - 3.205337925096858
+    - 2.255661904067648
+  - - 3.391433491175205
+    - 2.4035224959906687
+  - - 3.5775290572535523
+    - 2.5264245225251503
+  - - 3.7636246233318995
+    - 2.619830062691355
+  - - 3.9497201894102467
+    - 2.6792011955095503
+  - - 4.135815755488593
+    - 2.7
+  - - 64.1358157554886
+    - 2.7
+  - - 64.3469268665997
+    - 2.6905971941171347
+  - - 64.55803797771081
+    - 2.6633479107823486
+  - - 64.76914908882193
+    - 2.6196908514663586
+  - - 64.98026019993304
+    - 2.561064717639881
+  - - 65.19137131104415
+    - 2.4889082107736327
+  - - 65.40248242215526
+    - 2.404660032338329
+  - - 65.61359353326637
+    - 2.3097588838046876
+  - - 65.82470464437748
+    - 2.2056434666434246
+  - - 66.0358157554886
+    - 2.0937524823252556
+  - - 66.24692686659971
+    - 1.9755246323208973
+  - - 66.45803797771082
+    - 1.852398618101066
+  - - 66.66914908882192
+    - 1.7258131411364794
+  - - 66.88026019993303
+    - 1.5972069028978535
+  - - 67.09137131104416
+    - 1.4680186048559027
+  - - 67.30248242215526
+    - 1.339686948481346
+  - - 67.51359353326637
+    - 1.2136506352448977
+  - - 67.72470464437748
+    - 1.091348366617276
+  - - 67.93581575548859
+    - 0.9742188440691959
+  - - 68.1469268665997
+    - 0.8637007690713756
+  - - 68.35803797771082
+    - 0.7612328430945297
+  - - 68.56914908882193
+    - 0.6682537676093753
+  - - 68.78026019993304
+    - 0.5862022440866282
+  - - 68.99137131104415
+    - 0.5165169739970054
+  - - 69.20248242215526
+    - 0.4606366588112239
+  - - 69.41359353326636
+    - 0.42
+  - - 69.51359353326636
+    - 0.40470278049545716
+  - - 69.61359353326637
+    - 0.3896422316933159
+  - - 69.71359353326636
+    - 0.37483069639185407
+  - - 69.81359353326637
+    - 0.3602805173893499
+  - - 69.91359353326636
+    - 0.34600403748408165
+  - - 70.01359353326636
+    - 0.33201359947432696
+  - - 70.11359353326637
+    - 0.31832154615836444
+  - - 70.21359353326636
+    - 0.3049402203344717
+  - - 70.31359353326637
+    - 0.2918819648009273
+  - - 70.41359353326636
+    - 0.27915912235600904
+  - - 70.51359353326636
+    - 0.26678403579799503
+  - - 70.61359353326637
+    - 0.2547690479251635
+  - - 70.71359353326636
+    - 0.24312650153579238
+  - - 70.81359353326637
+    - 0.23186873942815997
+  - - 70.91359353326636
+    - 0.22100810440054422
+  - - 71.01359353326636
+    - 0.21055693925122315
+  - - 71.11359353326637
+    - 0.2005275867784751
+  - - 71.21359353326636
+    - 0.1909323897805779
+  - - 71.31359353326637
+    - 0.1817836910558098
+  - - 71.41359353326636
+    - 0.17309383340244897
+  - - 71.51359353326636
+    - 0.16487515961877328
+  - - 71.61359353326637
+    - 0.15714001250306106
+  - - 71.71359353326636
+    - 0.14990073485359018
+  - - 71.81359353326637
+    - 0.14316966946863885
+  - - 71.91359353326636
+    - 0.13695915914648527
+  - - 72.01359353326636
+    - 0.13128154668540737
+  - - 72.11359353326637
+    - 0.12614917488368318
+  - - 72.21359353326636
+    - 0.12157438653959107
+  - - 72.31359353326637
+    - 0.11756952445140895
+  - - 72.41359353326636
+    - 0.11414693141741494
+  - - 72.51359353326636
+    - 0.1113189502358872
+  - - 72.61359353326637
+    - 0.10909792370510364
+  - - 72.71359353326636
+    - 0.10749619462334256
+  - - 72.81359353326637
+    - 0.10652610578888201
+  - - 72.91359353326636
+    - 0.10620000000000002
+  - - 73.01359353326636
+    - 0.10620000000000002
+  - - 73.11359353326637
+    - 0.10620000000000002
+  - - 73.21359353326636
+    - 0.10620000000000002
+  - - 73.31359353326637
+    - 0.10620000000000002
+  - - 73.41359353326636
+    - 0.10620000000000002
+  - - 73.51359353326637
+    - 0.10620000000000002
+  - - 73.61359353326637
+    - 0.10620000000000002
+  - - 73.71359353326636
+    - 0.10620000000000002
+  - - 73.81359353326637
+    - 0.10620000000000002
+  - - 73.91359353326636
+    - 0.10620000000000002
+  - - 74.01359353326637
+    - 0.10620000000000002
+  - - 74.11359353326637
+    - 0.10620000000000002
+  - - 74.21359353326636
+    - 0.10620000000000002
+  - - 74.31359353326637
+    - 0.10620000000000002
+  - - 74.41359353326636
+    - 0.10620000000000002
+  - - 74.51359353326637
+    - 0.10620000000000002
+  - - 74.61359353326637
+    - 0.10620000000000002
+  - - 74.71359353326636
+    - 0.10620000000000002
+  - - 74.81359353326637
+    - 0.10620000000000002
+  - - 74.91359353326636
+    - 0.10620000000000002
+  limit_power_W: 5.0
+  line_attaches_to_drum_center: false
+  door_capture_interlock: true
+  door_capture_hold_s: 0.2
+flight:
+  speed_m_s: 20.0
+  altitude_m: 40.0
+  rho_kg_m3: 1.225
+  g_m_s2: 9.80665
+  wind_ned_m_s:
+  - 0
+  - 0
+  - 0
+  local_flow_factor: 1.0
+  gust: null
+  controls: {}
+simulation:
+  duration_s: 74.91359353326636
+  sample_dt_s: 0.01
+  max_step_s: 0.01
+  rtol: 1.0e-05
+  atol: 1.0e-07
+  stagnation_window_s: 120
+  stagnation_min_advance_s: 0.001
+  checkpoint_interval_s: 10
+  maximum_runtime_s: 7200
+aero:
+  executable: vendor/avl/avl.exe
+  geometry: test_models/H1_reference/geometry_variants/normal_r3/aero/normal_r3.avl
+  elevator_index: 2
+  lateral_control_indices:
+  - 1
+  - 3
+  moment_reference_frd_m:
+  - -0.5049248043385347
+  - 1.5265869599533492e-11
+  - -0.021885793883408965
+  alpha_deg:
+  - -6.0
+  - -4.0
+  - -2.0
+  - 0.0
+  - 2.0
+  - 4.0
+  - 6.0
+  - 9.0
+  - 12.0
+  beta_deg:
+  - -8.0
+  - -4.0
+  - 0.0
+  - 4.0
+  - 8.0
+  elevator_deg:
+  - -20.0
+  - -10.0
+  - -5.0
+  - 0.0
+  - 5.0
+  - 10.0
+  - 20.0
+provenance:
+  collision:
+    kind: assumption
+    source: Delivered CAD mesh contact with an 0.8 mm numerical skin and near-rigid
+      barrier; stiffness/damping are numerical regularisation, not measured impact
+      properties.
+  aircraft:
+    kind: assumption
+    source: 'New conventional high-wing TEST DESIGN: smooth closed fuselage, raised
+      tail boom, tapered 1.8 m wing with 4 deg dihedral and 1 deg washout, tapered
+      conventional tail, tricycle gear and nose propeller. CAD-weighted assumed masses,
+      not team aircraft data. Door inertia frozen closed.'
+  sensor:
+    kind: assumption
+    source: New 120 mm cylinder, 46 mm fin span, 40 g lumped mass. Aerodynamic/contact
+      properties unmeasured.
+  cable:
+    kind: assumption
+    source: 2.7 m = 1.5 times 1.8 m reference span, requested by user; 18 cells retain
+      approximately 0.15 m spacing. Linear density, drag and elastic properties remain
+      unmeasured assumptions.
+  bay:
+    kind: assumption
+    source: 56x70 mm rear opening, 140-degree offset door, passive 50x50 mm capture
+      throat, forward fairlead; geometric design assumptions, no structure/material
+      qualification.
+  winch:
+    kind: assumption
+    source: 'Feed point outside drum, forward relocated winch; prescribed decelerating
+      length schedule with slow final approach. No torque-limited motor dynamics.
+      Release push stops before retrieval. Door closing delayed until capture, with
+      a 0.2 s latch hold; commanded closing duration retained. User mission: full
+      payout 2.7 m, then hold exactly 60 s before recovery. Existing payout/recovery
+      speeds and final approach retained; door remains capture-interlocked.'
+  flight:
+    kind: assumption
+    source: 20 m/s, 40 m, still air, density 1.225 kg/m3. Local flow factor 1.0 is
+      unvalidated.
+  aero:
+    kind: calculated
+    source: Actual AVL 3.52 on the new R3 planform, twist and dihedral; copied H1
+      airfoil coordinates retained. Equivalent-area body from exact outer-CAD cross
+      sections; body/no-body sensitivity required. Gear/propeller/profile drag and
+      open-door wake remain unmeasured. https://web.mit.edu/drela/Public/web/avl/avl_doc.txt
+mission_profile:
+  wingspan_m: 1.8
+  wire_span_ratio: 1.5
+  deployed_length_m: 2.7
+  length_reference: Unstretched paid-out cable from winch fairlead to sensor tow point;
+    includes the internal bay path.
+  deployment_complete_s: 4.135815755488593
+  hold_duration_s: 60.0
+  recovery_start_s: 64.1358157554886
+  slow_approach_start_s: 69.41359353326636
+  retrieval_complete_s: 72.91359353326636
+  end_s: 74.91359353326636
+  speed_policy: Original piecewise reel velocities retained by scaling length and
+    time together; original final approach retained.

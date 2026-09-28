@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbf-stability"
+version = "0.1.0"
+description = "AVL-backed aircraft and towed sensor research prototype"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2", "PyYAML>=6", "plotly>=5", "matplotlib>=3.7", "threadpoolctl>=3"]
+
+[project.optional-dependencies]
+contact = ["pybullet==3.2.7", "cadquery>=2.8", "numba==0.66.0"]
+dev = ["pytest>=8", "nbformat>=5", "nbclient>=0.10", "ipykernel>=6", "nbconvert>=7", "jupyterlab>=4"]
+
+[project.scripts]
+dbf = "dbf_stability.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["avl: requires the real AVL executable", "slow: numerical integration checks"]

@@ -1,0 +1,251 @@
+name: downward_ramp_capture_reference
+aircraft:
+  mass_kg: 2.0
+  inertia_kgm2:
+  - - 0.18
+    - 0
+    - 0
+  - - 0
+    - 0.15
+    - 0
+  - - 0
+    - 0
+    - 0.3
+  cg_m:
+  - -0.085
+  - 0
+  - 0
+  tow_point_m:
+  - -0.08
+  - 0
+  - 0.03
+  thrust_point_m:
+  - 0
+  - 0
+  - 0
+  profile_cd: 0.03
+  max_thrust_N: 20
+sensor:
+  mass_kg: 0.1
+  inertia_kgm2:
+  - - 6.0e-05
+    - 0
+    - 0
+  - - 0
+    - 0.0003
+    - 0
+  - - 0
+    - 0
+    - 0.0003
+  length_m: 0.16
+  span_m: 0.1
+  area_m2: 0.004
+  tow_point_m:
+  - 0.04
+  - 0
+  - 0
+  cd: 0.6
+  cy_beta: 2.0
+  cz_alpha: 2.0
+  cm_alpha: -0.35
+  cn_beta: 0.35
+  rate_damping:
+  - 1.0
+  - 3.0
+  - 3.0
+  contact_points_m:
+  - - 0.08
+    - 0
+    - 0
+  - - -0.08
+    - 0
+    - 0
+  - - -0.04
+    - 0.05
+    - 0
+  - - -0.04
+    - -0.05
+    - 0
+  - - -0.04
+    - 0
+    - 0.05
+  - - -0.04
+    - 0
+    - -0.05
+cable:
+  length_m: 2.6
+  segments: 10
+  density_kg_m: 0.003
+  diameter_m: 0.002
+  EA_N: 60
+  damping_Ns_m: 0.03
+  damping_engagement_strain: 0.01
+  cd_normal: 1.2
+  cd_tangent: 0.02
+  spool_k_N_m: 800
+  spool_c_Ns_m: 3.0
+  limit_N: 15
+bay:
+  stowed_center_m:
+  - -0.15
+  - 0
+  - 0.03
+  exit_x_m: -0.28
+  front_x_m: -0.02
+  half_width_m: 0.12
+  floor_z_m: 0.09
+  ceiling_z_m: -0.07
+  ramp_slope: 0.12
+  lip_depth_m: 0.03
+  door_length_m: 0.22
+  release_push_N: 0
+  contact_k_N_m: 250
+  contact_c_Ns_m: 2.0
+  friction: 0.15
+  latch_k_N_m: 200
+  latch_c_Ns_m: 4
+  latch_kr_Nm_rad: 0.08
+  latch_cr_Nms_rad: 0.008
+  capture_radius_m: 0.07
+  capture_speed_m_s: 0.5
+  capture_angle_deg: 20
+  limit_contact_N: null
+  limit_penetration_m: 0.02
+  door_thickness_m: 0.006
+  wall_thickness_m: 0.01
+  contact_radius_m: 0.006
+winch:
+  stowed_length_m: 0.03
+  radius_m: 0.015
+  limit_torque_Nm: 0.3
+  release_s: 0.6
+  recovery_start_s: 5.0
+  door_schedule:
+  - - 0
+    - 0
+  - - 0.5
+    - 140
+  - - 10.0
+    - 140
+  - - 10.5
+    - 0
+  - - 11
+    - 0
+  length_schedule:
+  - - 0
+    - 0.03
+  - - 0.6
+    - 0.03
+  - - 4
+    - 2.6
+  - - 5
+    - 2.6
+  - - 10
+    - 0.03
+  - - 11
+    - 0.03
+flight:
+  speed_m_s: 16
+  altitude_m: 40
+  rho_kg_m3: 1.225
+  g_m_s2: 9.80665
+  wind_ned_m_s:
+  - 0
+  - 0
+  - 0
+  local_flow_factor: 1.0
+  gust: null
+  controls:
+    elevator_delta_deg:
+    - - 0
+      - 0
+    - - 0.6
+      - 0
+    - - 2
+      - -0.7890757953563572
+    - - 5
+      - -0.7890757953563572
+    - - 9.7
+      - 0
+    - - 11
+      - 0
+    thrust_delta_N:
+    - - 0
+      - 0
+    - - 0.6
+      - 0
+    - - 2
+      - 0.7151789879701331
+    - - 5
+      - 0.7151789879701331
+    - - 9.7
+      - 0
+    - - 11
+      - 0
+simulation:
+  duration_s: 11
+  sample_dt_s: 0.01
+  max_step_s: 0.025
+  rtol: 1.0e-05
+  atol: 1.0e-07
+aero:
+  executable: vendor/avl/avl.exe
+  geometry: examples/aircraft.avl
+  elevator_index: 3
+  lateral_control_indices:
+  - 2
+  - 4
+  moment_reference_frd_m:
+  - -0.085
+  - 0
+  - 0
+  alpha_deg:
+  - -8
+  - -4
+  - 0
+  - 2
+  - 4
+  - 6
+  - 8
+  - 12
+  - 16
+  beta_deg:
+  - -12
+  - 0
+  - 12
+  elevator_deg:
+  - -20
+  - -10
+  - 0
+  - 10
+  - 20
+provenance:
+  aircraft:
+    kind: assumption
+    source: Scaled MIT Plane Vanilla geometry; mass, inertia and profile drag assumed,
+      not a DBF team design.
+  sensor:
+    kind: assumption
+    source: Illustrative finned sensor; all coefficients and inertia require measurement
+      or independent analysis.
+  cable:
+    kind: assumption
+    source: Illustrative elastic bead chain. Stiffness, damping and drag require material
+      tests.
+  bay:
+    kind: assumption
+    source: 'Parametric rear ramp and compliant capture; dimensions and contact properties
+      unmeasured. Recovery-guide variant: door opens 140 deg from closed vertical,
+      forming a downward ramp; assumed geometry.'
+  winch:
+    kind: assumption
+    source: Prescribed reel speed; actual actuator dynamics unmodelled. Torque limit
+      reported, not enforced.
+  flight:
+    kind: assumption
+    source: Still-air reference condition; local flow factor is an explicit wake approximation.
+      Explicit open-loop trim-based elevator/thrust schedule, not autopilot or pilot
+      prediction.
+  aero:
+    kind: calculated
+    source: Real AVL 3.52, official Plane Vanilla scaled by 0.17; https://web.mit.edu/drela/Public/web/avl/

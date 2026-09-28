@@ -1,0 +1,48 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+.ipynb_checkpoints/
+outputs/
+
+# Installed solvers and local credentials are never committed.
+vendor/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.log
+
+# Local design history; retain the implementation record and UI evidence only.
+ui/design/*
+!ui/design/hybrid-aero-20260928/
+ui/design/hybrid-aero-20260928/*
+!ui/design/hybrid-aero-20260928/IMPLEMENTATION.md
+!ui/design/hybrid-aero-20260928/hybrid-ui-result.png
+
+# Modeling source inputs are versioned; generated CAD and solver runs stay local.
+test_models/**
+!test_models/**/
+!test_models/**/*.py
+!test_models/**/*.md
+!test_models/**/*.yaml
+!test_models/**/*.yml
+!test_models/**/*.avl
+!test_models/**/*.dat
+test_models/**/runs/
+test_models/**/aerodynamics/
+test_models/**/diagnostics/
+test_models/**/solver_variants/
+test_models/**/sources/
+test_models/**/__pycache__/
+
+# Native/JIT caches.
+*.nbc
+*.nbi
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db

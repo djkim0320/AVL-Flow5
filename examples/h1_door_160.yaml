@@ -1,0 +1,424 @@
+name: H1_offset_hinge_door_160_assumption_case
+collision:
+  parts_manifest:
+    aileron_+1_CAD_approx:
+      role: fixed
+    aileron_-1_CAD_approx:
+      role: fixed
+    capture_lower_pad:
+      role: fixed
+      box_kind: aabb
+    elevator_+1_CAD_approx:
+      role: fixed
+    elevator_-1_CAD_approx:
+      role: fixed
+    fuselage_H1_approx_with_rear_cutout:
+      role: fixed
+      concave: true
+    guide_ceiling:
+      role: fixed
+      box_kind: aabb
+    guide_floor:
+      role: fixed
+      box_kind: aabb
+    guide_side_+1:
+      role: fixed
+      box_kind: aabb
+    guide_side_-1:
+      role: fixed
+      box_kind: aabb
+    horizontal_tail_CAD_approx:
+      role: fixed
+    main_wing_CAD_approx:
+      role: fixed
+    rear_door_100deg:
+      role: door
+      reference_deg: 100.0
+      bay_reference_shift: true
+      box_kind: bay_door
+    rear_exit_frame:
+      role: fixed
+      decomposition: bay_aperture
+      concave: true
+    rudder_CAD_approx:
+      role: fixed
+    sensor_body:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_0:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_1:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_2:
+      role: sensor
+      coordinates: aircraft_stowed
+    sensor_fin_3:
+      role: sensor
+      coordinates: aircraft_stowed
+    vertical_fin_CAD_approx:
+      role: fixed
+    winch_drum:
+      role: fixed
+      spool: true
+  enabled: true
+  mesh_directory: test_models/H1_reference/meshes
+  skin_m: 0.0008
+  minimum_gap_m: 2.0e-05
+  stiffness_N_m: 20000.0
+  damping_Ns_m: 8.0
+  maximum_surface_travel_m: 0.0002
+  maximum_free_surface_travel_m: 0.002
+  clearance_query_m: 0.01
+  cable_contact_regularization_m: 0.00016
+  model: near_rigid_barrier_unvalidated_impact_loads
+aircraft:
+  mass_kg: 2.2800000000000002
+  inertia_kgm2:
+  - - 0.15777840482456137
+    - 0.0
+    - -0.005098730263157897
+  - - 0.0
+    - 0.2953470373104913
+    - 0.0
+  - - -0.005098730263157897
+    - 0.0
+    - 0.42581104915259654
+  cg_m:
+  - -0.5140131578947368
+  - 0.0
+  - -0.015657894736842103
+  tow_point_m:
+  - -0.38598684210526324
+  - 0.0
+  - 0.035657894736842104
+  thrust_point_m:
+  - 0.43401315789473677
+  - 0.0
+  - 0.015657894736842103
+  profile_cd: 0.035
+  max_thrust_N: 30.0
+sensor:
+  mass_kg: 0.04
+  inertia_kgm2:
+  - - 4.925333333333334e-06
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 5.116106666666666e-05
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 5.116106666666666e-05
+  length_m: 0.12
+  span_m: 0.046
+  area_m2: 0.0015
+  tow_point_m:
+  - 0.0638
+  - 0.0
+  - 0.0
+  cd: 0.6
+  cy_beta: 2.0
+  cz_alpha: 2.0
+  cm_alpha: -0.35
+  cn_beta: 0.35
+  rate_damping:
+  - 1.0
+  - 3.0
+  - 3.0
+  contact_points_m:
+  - - -0.0562
+    - 0.014
+    - 0.0
+  - - -0.0562
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - -0.0562
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - -0.0562
+    - 8.572527594031473e-19
+    - 0.014
+  - - -0.0562
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - -0.0562
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - -0.0562
+    - -0.014
+    - 1.7145055188062945e-18
+  - - -0.0562
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - -0.0562
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - -0.0562
+    - -2.5717582782094414e-18
+    - -0.014
+  - - -0.0562
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - -0.0562
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - 0.0038
+    - 0.014
+    - 0.0
+  - - 0.0038
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - 0.0038
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - 0.0038
+    - 8.572527594031473e-19
+    - 0.014
+  - - 0.0038
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - 0.0038
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - 0.0038
+    - -0.014
+    - 1.7145055188062945e-18
+  - - 0.0038
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - 0.0038
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - 0.0038
+    - -2.5717582782094414e-18
+    - -0.014
+  - - 0.0038
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - 0.0038
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - 0.0638
+    - 0.014
+    - 0.0
+  - - 0.0638
+    - 0.012124355652982142
+    - 0.006999999999999999
+  - - 0.0638
+    - 0.007000000000000002
+    - 0.01212435565298214
+  - - 0.0638
+    - 8.572527594031473e-19
+    - 0.014
+  - - 0.0638
+    - -0.006999999999999997
+    - 0.012124355652982142
+  - - 0.0638
+    - -0.012124355652982139
+    - 0.0070000000000000045
+  - - 0.0638
+    - -0.014
+    - 1.7145055188062945e-18
+  - - 0.0638
+    - -0.012124355652982144
+    - -0.006999999999999997
+  - - 0.0638
+    - -0.007000000000000006
+    - -0.012124355652982139
+  - - 0.0638
+    - -2.5717582782094414e-18
+    - -0.014
+  - - 0.0638
+    - 0.006999999999999991
+    - -0.012124355652982147
+  - - 0.0638
+    - 0.012124355652982137
+    - -0.007000000000000006
+  - - -0.0492
+    - 0.023
+    - 0.0
+  - - -0.0492
+    - -0.023
+    - 0.0
+  - - -0.0492
+    - 0.0
+    - 0.023
+  - - -0.0492
+    - 0.0
+    - -0.023
+  - - -0.0192
+    - 0.023
+    - 0.0
+  - - -0.0192
+    - -0.023
+    - 0.0
+  - - -0.0192
+    - 0.0
+    - 0.023
+  - - -0.0192
+    - 0.0
+    - -0.023
+cable:
+  length_m: 1.5
+  segments: 10
+  density_kg_m: 0.0015
+  diameter_m: 0.001
+  EA_N: 60.0
+  damping_Ns_m: 0.03
+  damping_engagement_strain: 0.01
+  cd_normal: 1.2
+  cd_tangent: 0.02
+  spool_k_N_m: 800
+  spool_c_Ns_m: 3.0
+  limit_N: 8.0
+bay:
+  stowed_center_m:
+  - -0.4759868421052632
+  - 0.0
+  - 0.035657894736842104
+  exit_x_m: -0.6259868421052631
+  front_x_m: -0.39598684210526325
+  half_width_m: 0.028
+  floor_z_m: 0.06365789473684211
+  ceiling_z_m: 0.007657894736842103
+  ramp_slope: 0.0
+  lip_depth_m: 0.0
+  door_length_m: 0.056
+  door_thickness_m: 0.002
+  wall_thickness_m: 0.002
+  contact_radius_m: 0.0015
+  release_push_N: 0.12
+  contact_k_N_m: 800.0
+  contact_c_Ns_m: 2.0
+  friction: 0.1
+  latch_k_N_m: 500.0
+  latch_c_Ns_m: 5.0
+  latch_kr_Nm_rad: 0.1
+  latch_cr_Nms_rad: 0.01
+  capture_radius_m: 0.006
+  capture_speed_m_s: 0.15
+  capture_angle_deg: 8.0
+  limit_contact_N: null
+  limit_penetration_m: 0.002
+  door_hinge_offset_m:
+  - -0.003
+  - 0.0
+  - 0.003
+  door_closed_offset_m:
+  - -0.003
+  - 0.0
+  - 0.0
+winch:
+  stowed_length_m: 0.0262
+  radius_m: 0.015
+  limit_torque_Nm: 0.15
+  release_s: 0.6
+  recovery_start_s: 3.0
+  door_schedule:
+  - - 0.0
+    - 0.0
+  - - 0.4
+    - 160.0
+  - - 6.5
+    - 160.0
+  - - 7.0
+    - 160.0
+  length_schedule:
+  - - 0.0
+    - 0.0262
+  - - 0.6
+    - 0.0262
+  - - 2.5
+    - 1.5
+  - - 3.0
+    - 1.5
+  - - 6.5
+    - 0.0262
+  - - 7.0
+    - 0.0262
+  limit_power_W: 5.0
+flight:
+  speed_m_s: 20.0
+  altitude_m: 40.0
+  rho_kg_m3: 1.225
+  g_m_s2: 9.80665
+  wind_ned_m_s:
+  - 0
+  - 0
+  - 0
+  local_flow_factor: 1.0
+  gust: null
+  controls: {}
+simulation:
+  duration_s: 7.0
+  sample_dt_s: 0.01
+  max_step_s: 0.01
+  rtol: 1.0e-05
+  atol: 1.0e-07
+aero:
+  executable: vendor/avl/avl.exe
+  geometry: test_models/H1_reference/geometry/h1_a.avl
+  elevator_index: 2
+  lateral_control_indices:
+  - 1
+  - 3
+  moment_reference_frd_m:
+  - -0.5140131578947368
+  - 0.0
+  - -0.015657894736842103
+  alpha_deg:
+  - -6.0
+  - -3.0
+  - 0.0
+  - 3.0
+  - 6.0
+  - 9.0
+  - 12.0
+  beta_deg:
+  - -8.0
+  - 0.0
+  - 8.0
+  elevator_deg:
+  - -20.0
+  - -10.0
+  - 0.0
+  - 10.0
+  - 20.0
+provenance:
+  collision:
+    kind: assumption
+    source: Delivered CAD mesh contact with an 0.8 mm numerical skin and near-rigid
+      barrier; stiffness/damping are numerical regularisation, not measured impact
+      properties.
+  aircraft:
+    kind: assumption
+    source: H1 A copied GLB lifting surfaces; lumped box masses, CG, inertia, thrust
+      and profile drag assumed.
+  sensor:
+    kind: assumption
+    source: New 120 mm cylinder, 46 mm fin span, 40 g lumped mass. Aerodynamic/contact
+      properties unmeasured.
+  cable:
+    kind: assumption
+    source: 1.5 m, 1.5 g/m, 1 mm line; EA and damping illustrative; no material tests.
+  bay:
+    kind: assumption
+    source: New 56 x 56 mm rear guide, outlet at original x=1.14 m. Requires cutout
+      through original aft lower shell. Door hinge moved aft/down 3 mm, closed leaf
+      moved aft 3 mm onto the outer frame face; ideal offset hinge, no bracket or
+      actuator packaging validation.
+  winch:
+    kind: assumption
+    source: Repositioned ideal actuator; prescribed schedules, no real motor or reel
+      inertia model. Door opens to 160 degrees in 0.4 s and stays open through 7 s
+      for comparison.
+  flight:
+    kind: assumption
+    source: 20 m/s, 40 m, still air, density 1.225 kg/m3. Local flow factor 1.0 is
+      unvalidated.
+  aero:
+    kind: calculated
+    source: Fresh actual AVL 3.52 on H1-A extracted lifting surfaces, no fuselage
+      body; original 2-degree wing incidence; https://web.mit.edu/drela/Public/web/avl/

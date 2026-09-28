@@ -1,0 +1,202 @@
+name: N2_DBF2027_highwing_point_mass
+collision:
+  enabled: false
+aircraft:
+  mass_kg: 2.18
+  inertia_kgm2:
+  - - 0.12396528242354739
+    - 0.0
+    - -0.015339065940366972
+  - - 0.0
+    - 0.192863585940367
+    - 0.0
+  - - -0.015339065940366972
+    - 0.0
+    - 0.2911113868501529
+  cg_m:
+  - -0.4158027522935779
+  - 0.0
+  - -0.013176605504587153
+  tow_point_m:
+  - -0.40419724770642207
+  - 0.0
+  - 0.07817660550458716
+  thrust_point_m:
+  - 0.40080275229357787
+  - 0.0
+  - 0.013176605504587153
+  profile_cd: 0.035
+  max_thrust_N: 25.0
+sensor:
+  model: point_mass
+  mass_kg: 0.1
+  tow_point_m:
+  - 0.0
+  - 0.0
+  - 0.0
+cable:
+  length_m: 2.8
+  segments: 8
+  density_kg_m: 0.0015
+  diameter_m: 0.001
+  EA_N: 60.0
+  damping_Ns_m: 0.03
+  damping_engagement_strain: 0.01
+  cd_normal: 1.2
+  cd_tangent: 0.02
+  spool_k_N_m: 800
+  spool_c_Ns_m: 3.0
+  limit_N: 8.0
+  guide_points_body_m: []
+bay:
+  exit_x_m: -0.40419724770642207
+  front_x_m: -0.18419724770642207
+  half_width_m: 0.087
+  floor_z_m: 0.10817660550458716
+  ceiling_z_m: -0.07882339449541284
+  ramp_slope: 0.0
+  lip_depth_m: 0.0
+  door_length_m: 0.16
+  door_thickness_m: 0.003
+  wall_thickness_m: 0.003
+  contact_radius_m: 0.0015
+  release_push_N: 0.0
+  contact_k_N_m: 800.0
+  contact_c_Ns_m: 2.0
+  friction: 0.1
+  latch_k_N_m: 500.0
+  latch_c_Ns_m: 5.0
+  latch_kr_Nm_rad: 0.0
+  latch_cr_Nms_rad: 0.0
+  capture_radius_m: 0.006
+  capture_speed_m_s: 0.15
+  capture_angle_deg: 8.0
+  stowed_center_m:
+  - -0.40419724770642207
+  - 0.0
+  - 0.09817660550458716
+  stowed_quaternion_wxyz:
+  - 1
+  - 0
+  - 0
+  - 0
+winch:
+  stowed_length_m: 0.02
+  radius_m: 0.015
+  limit_torque_Nm: 0.15
+  limit_power_W: 5.0
+  release_s: 0.6
+  recovery_start_s: 65.0
+  door_schedule:
+  - - 0
+    - 270
+  - - 75
+    - 270
+  length_schedule:
+  - - 0
+    - 0.02
+  - - 0.6
+    - 0.02
+  - - 5
+    - 2.8
+  - - 65
+    - 2.8
+  - - 75
+    - 0.02
+  door_capture_interlock: false
+flight:
+  speed_m_s: 25.0
+  altitude_m: 100.0
+  rho_kg_m3: 1.2133
+  g_m_s2: 9.80665
+  wind_ned_m_s:
+  - 0
+  - 0
+  - 0
+  local_flow_factor: 1.0
+  gust: null
+  controls: {}
+  controller:
+    enabled: false
+simulation:
+  duration_s: 1.0
+  sample_dt_s: 0.02
+  max_step_s: 0.01
+  rtol: 1.0e-05
+  atol: 1.0e-07
+  jacobian_workers: 12
+  maximum_runtime_s: 1800
+  checkpoint_interval_s: 10
+  stagnation_window_s: 120
+  stagnation_min_advance_s: 0.001
+aero:
+  executable: vendor/avl/avl.exe
+  geometry: D:\DBF\안정성 툴\test_models\N2_DBF2027\aero\N2.avl
+  elevator_index: 2
+  lateral_control_indices:
+  - 1
+  - 3
+  moment_reference_frd_m:
+  - -0.4158027522935779
+  - 0.0
+  - -0.013176605504587153
+  alpha_deg:
+  - -4.0
+  - 0.0
+  - 4.0
+  - 8.0
+  - 12.0
+  beta_deg:
+  - -5.0
+  - 0.0
+  - 5.0
+  elevator_deg:
+  - -15.0
+  - 0.0
+  - 15.0
+  backend: avl
+  flow5_executable: vendor/flow5/bin/flow5_v7.57_win64/flow5.exe
+  flow5_method: VLM2
+  rate_derivative_closure: classical_longitudinal_lateral
+  threads_per_worker: 1
+  lateral_difference_deg: 0.5
+  timeout_s: 600
+provenance:
+  aircraft:
+    type: assumed
+    source: N2 new CAD/AVL common parametric geometry; mass_budget.csv box-envelope
+      inertia; CD0=.035 unmeasured includes fuselage/gear/door.
+  sensor:
+    type: assumed
+    source: 0.10 kg point mass; no sensor CAD/aerodynamics/attitude/contact.
+  cable:
+    type: assumed
+    source: Assumed 1 mm, 1.5 g/m, EA60 N, normal CD1.2; no material test.
+  bay:
+    type: assumed
+    source: N2 open cargo pod with folded door, CAD visualization only in point mode.
+  winch:
+    type: assumed
+    source: Assumed 15 mm drum, 0.15 Nm and 5 W limits; CG-relative feed recorded
+      in dimensions.json.
+  flight:
+    type: assumed
+    source: 25 m/s at 100 m, density1.2133 kg/m3; no automatic controller.
+  aero:
+    type: assumed
+    source: Actual AVL3.52 calculation for N2 wing/tail NACA2412/0010 geometry; fuselage/propwash
+      excluded from VLM, CD0 explicit.
+mission_profile:
+  wingspan_m: 1.8
+  wire_span_ratio: 1.5
+  deployed_length_m: 2.7
+  length_reference: Unstretched paid-out cable from winch fairlead to sensor tow point;
+    includes the internal bay path.
+  deployment_complete_s: 4.135815755488593
+  hold_duration_s: 60.0
+  recovery_start_s: 64.1358157554886
+  slow_approach_start_s: 69.41359353326636
+  retrieval_complete_s: 72.91359353326636
+  end_s: 74.91359353326636
+  speed_policy: Original piecewise reel velocities retained by scaling length and
+    time together; original final approach retained.

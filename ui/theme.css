@@ -1,0 +1,111 @@
+/* Design tokens shared by the editor and the result replay.
+   Dark is the default; [data-theme="light"] on <html> switches palettes. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0f13;
+  --surface: #15181d;
+  --surface-2: #1b1f26;
+  --surface-3: #242a33;
+  --line: #262b34;
+  --line-2: #353c48;
+  --text: #e8ebf0;
+  --text-2: #aab2bf;
+  --text-3: #8a93a3;
+
+  --accent: #2968d8;
+  --accent-hover: #2f74e8;
+  --accent-text: #7fb2ff;
+  --accent-soft: rgb(47 116 232 / .16);
+  --accent-line: rgb(79 146 255 / .55);
+  --on-accent: #ffffff;
+
+  --aircraft: #b9cbd6;
+  --sensor: #f2a33a;
+  --sensor-text: #f7b95f;
+  --sensor-soft: rgb(242 163 58 / .14);
+  --winch: #86aec4;
+  --ok: #4fd18f;
+  --ok-soft: rgb(79 209 143 / .12);
+  --warn: #f3bd4e;
+  --warn-soft: rgb(243 189 78 / .12);
+  --danger: #ff7b76;
+  --danger-soft: rgb(255 107 102 / .12);
+
+  --axis-x: #ff7373;
+  --axis-y: #5fd08f;
+  --axis-z: #6aa6ff;
+
+  --vp-center: #2b313b;
+  --vp-edge: #121519;
+  --grid-major: #465062;
+  --grid-minor: #2c333e;
+  --glass: rgb(21 24 29 / .82);
+  --glass-line: rgb(255 255 255 / .07);
+  --backdrop: rgb(4 6 9 / .66);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .35);
+  --shadow-2: 0 10px 30px rgb(0 0 0 / .45), 0 0 0 1px rgb(255 255 255 / .04);
+  --shadow-3: 0 24px 80px rgb(0 0 0 / .6);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e8ebf0;
+  --surface: #ffffff;
+  --surface-2: #f3f5f8;
+  --surface-3: #e8ecf1;
+  --line: #e1e5eb;
+  --line-2: #cbd2dc;
+  --text: #121821;
+  --text-2: #4b5667;
+  --text-3: #626d7e;
+
+  --accent: #1f66d9;
+  --accent-hover: #1857bd;
+  --accent-text: #1a5ecb;
+  --accent-soft: rgb(31 102 217 / .09);
+  --accent-line: rgb(31 102 217 / .45);
+  --on-accent: #ffffff;
+
+  --aircraft: #5f7886;
+  --sensor: #d07a0c;
+  --sensor-text: #9c5500;
+  --sensor-soft: rgb(208 122 12 / .1);
+  --winch: #4a6b7a;
+  --ok: #17704a;
+  --ok-soft: rgb(29 128 82 / .09);
+  --warn: #8f5e00;
+  --warn-soft: rgb(200 140 20 / .12);
+  --danger: #c2332f;
+  --danger-soft: rgb(194 51 47 / .08);
+
+  --axis-x: #cc3a3a;
+  --axis-y: #1f7a45;
+  --axis-z: #2462c7;
+
+  --vp-center: #fbfcfd;
+  --vp-edge: #d9dee6;
+  --grid-major: #aeb7c4;
+  --grid-minor: #d3d9e1;
+  --glass: rgb(255 255 255 / .86);
+  --glass-line: rgb(15 25 40 / .08);
+  --backdrop: rgb(15 22 34 / .45);
+  --shadow-1: 0 1px 2px rgb(15 25 40 / .08);
+  --shadow-2: 0 10px 30px rgb(15 25 40 / .14), 0 0 0 1px rgb(15 25 40 / .05);
+  --shadow-3: 0 24px 80px rgb(15 25 40 / .28);
+}
+
+:root {
+  /* 3D marker colours are fixed in app.js; the inspector legend mirrors them. */
+  --marker-start: #4c9aff;
+  --marker-end: #2fcf7c;
+  --marker-cg: #ff64d5;
+  --marker-flow: #3cc9d8;
+  --font: 'Segoe UI Variable Text', 'Segoe UI', 'Malgun Gothic', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', 'Cascadia Code', Consolas, 'Malgun Gothic', monospace;
+  --radius-s: 5px;
+  --radius: 7px;
+  --radius-l: 12px;
+}
+
+.analysis-quality table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}.analysis-quality th,.analysis-quality td{padding:5px 3px;text-align:left;overflow-wrap:anywhere;border-bottom:1px solid var(--line)}

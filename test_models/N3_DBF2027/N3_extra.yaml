@@ -1,0 +1,214 @@
+name: N3_DBF2027_new_cargo_aircraft
+collision:
+  enabled: false
+aircraft:
+  mass_kg: 2.6950000000000007
+  inertia_kgm2:
+  - - 0.18868947914418674
+    - 0.0
+    - -0.03746136057513915
+  - - 0.0
+    - 0.3510753999002782
+    - 0.0
+  - - -0.03746136057513915
+    - 0.0
+    - 0.48401115515609144
+  cg_m:
+  - -0.4650371057513913
+  - 0.0
+  - -0.0428942486085343
+  tow_point_m:
+  - -0.44496289424860874
+  - 0.0
+  - 0.08289424860853431
+  thrust_point_m:
+  - 0.4250371057513913
+  - 0.0
+  - 0.022894248608534302
+  profile_cd: 0.03
+  max_thrust_N: 30.0
+sensor:
+  model: point_mass
+  mass_kg: 0.12
+  tow_point_m:
+  - 0.0
+  - 0.0
+  - 0.0
+cable:
+  length_m: 3.0
+  segments: 16
+  density_kg_m: 0.0015
+  diameter_m: 0.001
+  EA_N: 60.0
+  damping_Ns_m: 0.03
+  damping_engagement_strain: 0.01
+  cd_normal: 1.2
+  cd_tangent: 0.02
+  spool_k_N_m: 800.0
+  spool_c_Ns_m: 3.0
+  limit_N: 10.0
+  guide_points_body_m: []
+bay:
+  exit_x_m: -0.44496289424860874
+  front_x_m: -0.14496289424860875
+  half_width_m: 0.102
+  floor_z_m: 0.1528942486085343
+  ceiling_z_m: -0.062105751391465694
+  ramp_slope: 0.0
+  lip_depth_m: 0.0
+  door_length_m: 0.2
+  door_thickness_m: 0.003
+  wall_thickness_m: 0.003
+  contact_radius_m: 0.0015
+  release_push_N: 0.0
+  contact_k_N_m: 800.0
+  contact_c_Ns_m: 2.0
+  friction: 0.1
+  latch_k_N_m: 500.0
+  latch_c_Ns_m: 5.0
+  latch_kr_Nm_rad: 0.0
+  latch_cr_Nms_rad: 0.0
+  capture_radius_m: 0.006
+  capture_speed_m_s: 0.15
+  capture_angle_deg: 8.0
+  stowed_center_m:
+  - -0.44496289424860874
+  - 0.0
+  - 0.10289424860853431
+  stowed_quaternion_wxyz:
+  - 1
+  - 0
+  - 0
+  - 0
+winch:
+  stowed_length_m: 0.02
+  radius_m: 0.016
+  limit_torque_Nm: 0.2
+  limit_power_W: 8.0
+  release_s: 0.6
+  recovery_start_s: 65.0
+  door_schedule:
+  - - 0
+    - 270
+  - - 80
+    - 270
+  length_schedule:
+  - - 0
+    - 0.02
+  - - 0.6
+    - 0.02
+  - - 5
+    - 3.0
+  - - 65
+    - 3.0
+  - - 80
+    - 0.02
+  door_capture_interlock: false
+flight:
+  speed_m_s: 20.0
+  altitude_m: 100.0
+  rho_kg_m3: 1.2133
+  g_m_s2: 9.80665
+  wind_ned_m_s:
+  - 0
+  - 0
+  - 0
+  local_flow_factor: 1.0
+  gust: null
+  controls: {}
+  controller:
+    enabled: false
+simulation:
+  duration_s: 2.0
+  sample_dt_s: 0.02
+  max_step_s: 0.01
+  rtol: 1.0e-05
+  atol: 1.0e-07
+  jacobian_workers: 11
+  maximum_runtime_s: 1800
+  checkpoint_interval_s: 2
+  stagnation_window_s: 120
+  stagnation_min_advance_s: 0.001
+  trim_linear_tolerance_m_s2: 1.0e-05
+  trim_angular_tolerance_rad_s2: 5.0e-05
+aero:
+  executable: vendor/avl/avl.exe
+  geometry: D:\DBF\안정성 툴\test_models\N3_DBF2027\aero\extra\N3.avl
+  elevator_index: 2
+  lateral_control_indices:
+  - 1
+  - 3
+  moment_reference_frd_m:
+  - -0.4650371057513913
+  - 0.0
+  - -0.0428942486085343
+  alpha_deg:
+  - -4
+  - -2
+  - 0
+  - 2
+  - 4
+  - 6
+  - 8
+  beta_deg:
+  - -4
+  - 0
+  - 4
+  elevator_deg:
+  - -8
+  - -4
+  - 0
+  - 4
+  - 8
+  backend: avl
+  flow5_executable: vendor/flow5/bin/flow5_v7.57_win64/flow5.exe
+  flow5_method: VLM2
+  rate_derivative_closure: classical_longitudinal_lateral
+  threads_per_worker: 1
+  lateral_difference_deg: 0.5
+  timeout_s: 1800
+provenance:
+  aircraft:
+    kind: assumed
+    source: N3 new parametric CAD/AVL; component mass budget and box-envelope inertias,
+      unmeasured. Receiver plus separate Rx/servo COTS battery allocated 80 g (assumed
+      6.6 V/700 mAh envelope, exact product unselected); ESC BEC disabled in intended
+      wiring. CD0=.030 design assumption; sensitivity .020/.040.
+  sensor:
+    kind: assumed
+    source: 0.12 kg point payload only. Sensor 220x90x100 mm reserved envelope is
+      a packaging assumption, not an aerodynamic sensor model.
+  cable:
+    kind: assumed
+    source: 3.0 m to provide margin over 2.70 m exit-to-tip distance; 1 mm, 1.5 g/m,
+      EA60 N, CDn1.2/CDt.02 assumed.
+  bay:
+    kind: assumed
+    source: N3 aft compartment, 270 degree underbody door; CAD visualization only;
+      no payload contact in point mode.
+  winch:
+    kind: assumed
+    source: Internal winch at ARU(.785,0,.055); force reference at exit(.910,0,-.040);
+      16 mm radius/.20 Nm/8 W assumed limits.
+  flight:
+    kind: assumed
+    source: 20 m/s nominal at100 m, rho1.2133. Manual/open-loop model. No automatic
+      flight controller.
+  aero:
+    kind: assumed
+    source: Fresh actual AVL3.52 and flow5 7.57 lifting-surface solves; inviscid;
+      open fuselage/propwash/viscous separation excluded; explicit extra drag assumption.
+mission_profile:
+  wingspan_m: 1.8
+  wire_span_ratio: 1.5
+  deployed_length_m: 2.7
+  length_reference: Unstretched paid-out cable from winch fairlead to sensor tow point;
+    includes the internal bay path.
+  deployment_complete_s: 4.135815755488593
+  hold_duration_s: 60.0
+  recovery_start_s: 64.1358157554886
+  slow_approach_start_s: 69.41359353326636
+  retrieval_complete_s: 72.91359353326636
+  end_s: 74.91359353326636
+  speed_policy: Original piecewise reel velocities retained by scaling length and
+    time together; original final approach retained.

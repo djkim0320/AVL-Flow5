@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DBF STUDIO · 센서 배치</title>
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('dbf-theme')==='light'?'light':'dark';}catch{}</script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head>
+<body data-view="editor">
+<svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8Z M3 8l9 5 9-5 M12 13v8"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M12 3c.9 0 1.5.8 1.5 2v4.2l7.5 4.3v2l-7.5-2.3v4.3l2 1.5v1.5l-3.5-1-3.5 1V20l2-1.5v-4.3L3 16.5v-2l7.5-4.3V5c0-1.2.6-2 1.5-2Z"/></symbol>
+  <symbol id="i-sensor" viewBox="0 0 24 24"><path d="M6.5 9.5h9a2.5 2.5 0 0 1 0 5h-9Z M6.5 9.5 3.5 6 M6.5 14.5 3.5 18 M18 12h3.5"/></symbol>
+  <symbol id="i-spool" viewBox="0 0 24 24"><circle cx="10" cy="12" r="7"/><circle cx="10" cy="12" r="2"/><path d="M10 5h11"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4m-4.5 4.5L12 4l4.5 4.5 M4 15v5h16v-5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5h7l2 2.5h9V19H3V7Zm0 3h18"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5Z M8.5 4v5h7V4 M8.5 20v-6h7v6"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 5 4 10l5 5 M4 10h10a6 6 0 0 1 0 12h-2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="m10 7 2-2a5 5 0 0 1 7 7l-2 2 M14 17l-2 2a5 5 0 0 1-7-7l2-2 M9 15l6-6"/></symbol>
+  <symbol id="i-unlink" viewBox="0 0 24 24"><path d="m10 7 2-2a5 5 0 0 1 7 7l-2 2 M14 17l-2 2a5 5 0 0 1-7-7l2-2 M4 4l16 16"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><path d="M12 3v18 M3 12h18 M9 6l3-3 3 3 M9 18l3 3 3-3 M6 9l-3 3 3 3 M18 9l3 3-3 3"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7 M20 4v7h-7"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><path d="M8 3H3v5 M16 3h5v5 M21 16v5h-5 M8 21H3v-5"/><circle cx="12" cy="12" r="3.5"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M13 4H5v16h8 M10 12h11m-4-4 4 4-4 4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16 M7 15l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14 M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2 M12 19.5v2 M2.5 12h2 M19.5 12h2 M5.3 5.3l1.4 1.4 M17.3 17.3l1.4 1.4 M5.3 18.7l1.4-1.4 M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14 M5 12h14"/></symbol>
+  <symbol id="i-cg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8h-8Z M12 20a8 8 0 0 1-8-8h8Z" style="fill:currentColor;stroke:none"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7 M12 17h.01"/></symbol>
+</defs></svg>
+<a class="skip" href="#viewport">3D 작업 영역으로 이동</a>
+<header class="topbar">
+  <div class="brand"><span class="brandmark" aria-hidden="true"><svg class="icon"><use href="#i-cube"/></svg></span><strong>DBF<span>STUDIO</span></strong></div>
+  <div class="project-title"><h1>센서 배치</h1><span id="save-state">새 프로젝트</span></div>
+  <nav class="view-tabs" aria-label="화면 전환">
+    <button id="view-editor" data-view-tab="editor" aria-current="true"><svg class="icon" aria-hidden="true"><use href="#i-cube"/></svg>배치</button>
+    <button id="open-analysis" data-view-tab="analysis" aria-current="false"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>해석</button>
+  </nav>
+  <div class="top-actions">
+    <div class="history-actions"><button id="undo" class="icon-button" disabled aria-label="되돌리기" title="되돌리기 · Ctrl+Z"><svg class="icon" aria-hidden="true"><use href="#i-undo"/></svg></button><button id="redo" class="icon-button" disabled aria-label="다시 실행" title="다시 실행 · Ctrl+Shift+Z"><svg class="icon mirror" aria-hidden="true"><use href="#i-undo"/></svg></button></div>
+    <span class="top-divider" aria-hidden="true"></span>
+    <button id="open-project" class="ghost" aria-label="프로젝트 열기" title="프로젝트 열기"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg><span>프로젝트 열기</span></button>
+    <button id="save-project" class="ghost" aria-label="파일 저장" title="파일 저장"><svg class="icon" aria-hidden="true"><use href="#i-save"/></svg><span>파일 저장</span></button>
+    <span class="top-divider" aria-hidden="true"></span>
+    <button id="theme-toggle" class="icon-button" aria-label="밝은 화면으로 전환" title="밝은 화면으로 전환"><svg class="icon theme-sun" aria-hidden="true"><use href="#i-sun"/></svg><svg class="icon theme-moon" aria-hidden="true"><use href="#i-moon"/></svg></button>
+  </div>
+</header>
+<main class="layout">
+  <aside class="sidebar" aria-label="작업 순서">
+    <div class="pane-heading"><span>작업 순서</span><span class="caption">위에서부터 차례로</span></div>
+    <ol class="steps">
+      <li class="step" data-step="1" aria-current="step">
+        <div class="step-head"><b class="step-badge">1</b><div><h2>모델 불러오기</h2><p>문이 열린 기체 파일을 불러옵니다.</p></div></div>
+        <div class="step-body">
+          <button id="load-aircraft" class="load-button"><span class="step-num" data-role="aircraft"><svg class="icon" aria-hidden="true"><use href="#i-plane"/></svg></span><span>기체 불러오기<small>STEP · STL · GLB</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-upload"/></svg></button>
+          <button id="recent-model-file" type="button" draggable="true" hidden class="recent-button" title="최근 파일을 3D 화면에 끌어놓아 다시 불러오기"></button>
+          <p class="hint">기체 파일을 3D 화면에 끌어놓아도 됩니다.</p>
+          <details class="import-details"><summary>파일 단위·축 설정</summary><div class="import-options"><label>파일 단위<select id="import-unit"><option value="mm">mm</option><option value="cm">cm</option><option value="m">m</option></select></label><label>파일 축<select id="import-axes"><option value="frd">X 앞 · Y 오른쪽 · Z 아래</option><option value="zup">X 앞 · Y 왼쪽 · Z 위</option><option value="aru">X 뒤 · Y 오른쪽 · Z 위</option><option value="yup">X 앞 · Y 위 · Z 오른쪽</option></select></label></div><p class="hint">STEP는 자동으로 mm로 변환합니다. STL·GLB는 파일 단위를 선택하세요.</p></details>
+          <div class="step-divider"><span>새 기체라면</span></div>
+          <button id="open-aircraft-definition" type="button" class="load-button"><span class="step-num" data-role="definition"><svg class="icon" aria-hidden="true"><use href="#i-cg"/></svg></span><span>기체 정의<small>부품 · 질량·CG · 공력 면 → 해석 모델 등록</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        </div>
+      </li>
+      <li class="step" data-step="2">
+        <div class="step-head"><b class="step-badge">2</b><div><h2>윈치 위치 설정</h2><p>줄이 나올 윈치를 추가한 뒤 드래그해 배치합니다.</p></div></div>
+        <div class="step-body">
+          <button id="add-winch" class="load-button"><span class="step-num" data-role="winch"><svg class="icon" aria-hidden="true"><use href="#i-spool"/></svg></span><span>윈치 추가<small>추가 후 드래그로 위치 지정</small></span><svg class="icon trail" aria-hidden="true"><use href="#i-plus"/></svg></button>
+          <p class="tip"><span><kbd>G</kbd> 이동</span><span><kbd>R</kbd> 회전</span><span><kbd>F</kbd> 선택 확대</span></p><p class="hint">윈치는 기체 중심선에 놓입니다. 견인 트림은 좌우 대칭만 지원하므로 Y는 중심선에 두세요. <b>측면</b> 보기에서 드래그하거나 X·Z 화살표를 쓰면 Y가 유지됩니다. 정확한 값은 오른쪽 <b>선택 속성</b>에 입력합니다.</p>
+        </div>
+      </li>
+      <li class="step" data-step="3">
+        <div class="step-head"><b class="step-badge">3</b><div><h2>질점과 줄 길이<span id="connection-state" class="tag">질점 대기</span></h2><p>센서 대신 질량만 있는 점을 줄 끝에 추가합니다.</p></div></div>
+        <div class="step-body">
+          <label class="field">센서 역할 질량<span class="unit-input"><input id="point-mass" type="number" min="0.0001" max="10" step="any" value="0.04"><em>kg</em></span></label>
+          <label class="field">전개할 줄 길이<span class="unit-input"><input id="wire-length" type="number" min="0.001" max="100" step="0.1" value="2.7"><em>m</em></span></label>
+          <button id="add-point" class="primary full" disabled><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>질점 추가 · 줄 자동 연결</button>
+          <p class="hint">질점은 윈치 아래에 줄 길이만큼 표시됩니다. 질점의 크기는 표시용이며 실제 평형 위치는 해석에서 계산합니다.</p>
+          <details><summary>줄 세부 설정</summary><label class="field">줄 직경<span class="unit-input"><input id="wire-diameter" type="number" min="0.05" max="20" step="0.1" value="1"><em>mm</em></span></label><p class="hint">줄 물성은 해석 화면에서 확인할 수 있습니다.</p></details>
+          <p id="path-status" class="path-status">윈치와 질점을 추가하면 줄을 자동 연결합니다.</p>
+          <p class="hint quiet">질점의 중력과 줄 장력을 계산합니다. 센서 형상·공력·회전·표면 접촉은 사용하지 않습니다.</p>
+        </div>
+      </li>
+      <li class="step" data-step="4">
+        <div class="step-head"><b class="step-badge">4</b><div><h2>저장·해석</h2><p>배치를 파일로 저장하거나 해석 조건을 설정합니다.</p></div></div>
+        <div class="step-body">
+          <button id="open-analysis-panel" class="primary full">해석 조건 설정<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <div class="button-row"><button id="save-project-step"><svg class="icon" aria-hidden="true"><use href="#i-save"/></svg>파일 저장</button><button id="export-setup"><svg class="icon" aria-hidden="true"><use href="#i-out"/></svg>배치 내보내기</button></div>
+          <p class="hint quiet">윈치 위치·질점 질량·줄 길이를 저장합니다. 기체 물성과 공력 조건은 해석 화면에서 확인하세요.</p>
+        </div>
+      </li>
+    </ol>
+    <details class="help"><summary><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg>마우스·키보드 조작</summary><dl class="shortcuts"><div><dt>시점 회전</dt><dd>빈 곳 드래그</dd></div><div><dt>시점 이동</dt><dd>휠 버튼 또는 우클릭 드래그</dd></div><div><dt>확대·축소</dt><dd>휠</dd></div><div><dt>모델 이동</dt><dd>모델 드래그 · 축 화살표</dd></div><div><dt>이동 / 회전 도구</dt><dd><kbd>G</kbd> <kbd>R</kbd></dd></div><div><dt>선택 모델 확대</dt><dd><kbd>F</kbd></dd></div><div><dt>조작 취소</dt><dd><kbd>Esc</kbd></dd></div><div><dt>되돌리기 / 다시</dt><dd><kbd>Ctrl Z</kbd> <kbd>Ctrl ⇧ Z</kbd></dd></div></dl></details>
+  </aside>
+  <section class="workspace" aria-label="3D 배치 화면">
+    <div class="view-toolbar" role="toolbar" aria-label="3D 보기 도구">
+      <div class="button-group"><button id="move" aria-pressed="true" title="이동 · G"><svg class="icon" aria-hidden="true"><use href="#i-move"/></svg>이동<kbd>G</kbd></button><button id="rotate" aria-pressed="false" title="회전 · R"><svg class="icon" aria-hidden="true"><use href="#i-rotate"/></svg>회전<kbd>R</kbd></button></div>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <div class="view-buttons"><button id="view-all">전체 보기</button><button id="view-side">측면</button><button id="view-top">상면</button><button id="view-rear">후면</button><button id="focus" title="선택 확대 · F"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>선택 확대<kbd>F</kbd></button></div>
+    </div>
+    <div id="viewport" tabindex="0" aria-label="3D 편집 영역. 모델을 드래그해 이동하세요. 숫자 입력은 선택 속성 패널에서 할 수 있습니다.">
+      <div id="empty-scene" class="empty-scene"><div class="empty-symbol" aria-hidden="true"><svg class="icon"><use href="#i-plane"/></svg></div><h2>기체를 불러와 시작하세요</h2><p>문이 열린 기체의 STEP · STL · GLB 파일을 선택하거나 이 화면에 끌어놓으세요.</p><button id="empty-load" class="primary"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>기체 파일 불러오기</button></div>
+      <div id="scene-badge" class="scene-badge">3D 작업 영역</div>
+      <div class="axis-note" aria-label="좌표축"><span class="axis-x"><b>X</b>전방</span><span class="axis-y"><b>Y</b>우측</span><span class="axis-z"><b>Z</b>하방</span><span class="axis-unit">mm · FRD</span></div>
+      <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><strong id="busy-text">모델을 불러오는 중…</strong><span>큰 STEP 파일은 변환에 시간이 걸릴 수 있습니다.</span></div>
+    </div>
+    <div class="statusbar"><span id="status" role="status" aria-live="polite">모델을 불러와 주세요.</span><span id="wire-measure">연결된 줄 없음</span></div><div id="error" role="alert" class="error" hidden></div>
+  </section>
+  <aside class="inspector" aria-label="장면과 선택 속성">
+    <section class="scene-section">
+      <div class="pane-heading"><span>장면</span><span id="object-count" class="count">0개</span></div>
+      <div class="pane-body">
+        <div id="object-list" class="object-list"></div><p id="object-empty" class="object-empty">불러온 모델이 여기에 표시됩니다.</p>
+        <div class="toggles"><label class="switch"><input id="aircraft-lock" type="checkbox" role="switch" checked><span>기체 위치 고정</span></label><label class="switch"><input id="xray" type="checkbox" role="switch"><span>기체를 투명하게 보기</span></label><label class="switch"><input id="show-flow" type="checkbox" role="switch" checked><span>공기 흐름 방향 표시</span></label></div>
+      </div>
+    </section>
+    <section class="props-section">
+      <div class="pane-heading"><span>선택 속성</span><span id="selection-kind" class="tag">선택 없음</span></div>
+      <div class="pane-body">
+        <p id="selection-name" class="selection-name">모델을 선택하세요.</p>
+        <p class="select-hint">3D 화면이나 위 장면 목록에서 모델을 클릭하면 위치와 회전을 숫자로 조정할 수 있습니다.</p>
+        <fieldset id="transform-fields" disabled>
+          <legend>위치 <span>mm · 작업 원점</span></legend>
+          <div class="axis-rows">
+            <label class="axis-field axis-x"><span>X</span><input id="px" aria-label="위치 X" type="number" step="1" value="0"><em>mm</em></label>
+            <label class="axis-field axis-y"><span>Y</span><input id="py" aria-label="위치 Y" type="number" step="1" value="0"><em>mm</em></label>
+            <label class="axis-field axis-z"><span>Z</span><input id="pz" aria-label="위치 Z" type="number" step="1" value="0"><em>mm</em></label>
+          </div>
+          <div class="rotation-group">
+            <div class="legend-like">회전 <span>° · XYZ 순서</span></div>
+            <div class="axis-cols">
+              <label class="axis-field axis-x"><span>X</span><input id="rx" aria-label="회전 X" type="number" step="1" value="0"></label>
+              <label class="axis-field axis-y"><span>Y</span><input id="ry" aria-label="회전 Y" type="number" step="1" value="0"></label>
+              <label class="axis-field axis-z"><span>Z</span><input id="rz" aria-label="회전 Z" type="number" step="1" value="0"></label>
+            </div>
+          </div>
+        </fieldset>
+        <p class="lock-hint">기체 위치가 고정되어 있습니다. 옮기려면 위 <b>기체 위치 고정</b>을 끄세요.</p>
+        <p class="mass-hint">질점 위치는 윈치 위치와 줄 길이로 정해집니다. 옮기려면 윈치를 움직이거나 왼쪽 <b>3단계</b>에서 줄 길이를 바꾸세요.</p>
+        <div class="orient-group">
+          <div class="legend-like">해석 기준 방향 <span>CAD 회전 · 90° 단위</span></div>
+          <p class="hint">해석은 기체의 <b>+X</b>를 앞으로 봅니다. 청록색 공기 흐름 화살표가 기체 코 쪽에서 오도록 돌리세요.</p>
+          <div class="orient-grid" role="group" aria-label="기체 방향 90도 보정">
+            <span class="axis-x">X</span><button type="button" data-turn="x" data-sign="-1" aria-label="X축 −90도 회전">↺ −90°</button><button type="button" data-turn="x" data-sign="1" aria-label="X축 +90도 회전">↻ +90°</button>
+            <span class="axis-y">Y</span><button type="button" data-turn="y" data-sign="-1" aria-label="Y축 −90도 회전">↺ −90°</button><button type="button" data-turn="y" data-sign="1" aria-label="Y축 +90도 회전">↻ +90°</button>
+            <span class="axis-z">Z</span><button type="button" data-turn="z" data-sign="-1" aria-label="Z축 −90도 회전">↺ −90°</button><button type="button" data-turn="z" data-sign="1" aria-label="Z축 +90도 회전">↻ +90°</button>
+          </div>
+          <p id="orient-state" class="orient-state">보정 없음 · 파일 방향 그대로</p>
+          <p class="hint quiet">CAD 형상이 바뀌므로 해석 모델 연결을 다시 확인합니다. 윈치는 기체와 함께 돌아갑니다. 기체 정의는 방향을 맞춘 뒤 입력하세요.</p>
+          <button id="reset-aircraft-pose" type="button" class="text-button" hidden>화면 표시 회전을 0으로 되돌리기</button>
+        </div>
+        <p id="selection-size" class="size-readout">모델을 선택하면 외곽 크기가 표시됩니다.</p>
+      </div>
+    </section>
+    <div class="pane-footnote"><span>좌표계 <strong>FRD</strong></span><span>표시 단위 <strong>mm</strong></span></div>
+  </aside>
+</main>
+<input id="model-file" type="file" accept=".stl,.glb,.step,.stp" hidden><input id="project-file" type="file" accept=".json" hidden>
+<script type="module" src="app.js"></script>
+</body></html>
