@@ -88,6 +88,17 @@ class DefinitionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '겹칩니다'):
             export_aero(d, p['objects']['aircraft'])
 
+    def test_control_roles_must_match_the_surface_control(self):
+        p = definition_fixture()
+        d = p['aircraft_definition']
+        d['parts'][0]['role'] = 'aileron'
+        self.assertIsNotNone(export_aero(d, p['objects']['aircraft'])['controls']['aileron'])
+        d['surfaces'][0]['control'] = 'none'
+        with self.assertRaisesRegex(ValueError, '에일러론'):
+            export_aero(d, p['objects']['aircraft'])
+        d['parts'][0]['role'] = 'control'  # legacy generic role stays accepted
+        export_aero(d, p['objects']['aircraft'])
+
     def test_definition_changes_require_registration_and_mapping_uses_cg(self):
         from dbf_studio import model_registry
         from dbf_studio.analysis_bridge import catalog, prepare

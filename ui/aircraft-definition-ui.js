@@ -1,4 +1,14 @@
-import { newDefinition, roleLabels, partBounds, defaultStations, parseFoil } from './aircraft-model.js';
+import {
+  newDefinition,
+  roleLabels,
+  roleGroups,
+  roleColors,
+  suggestRole,
+  surfaceDefaults,
+  partBounds,
+  defaultStations,
+  parseFoil
+} from './aircraft-model.js';
 const escape = s =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -28,6 +38,7 @@ export function initAircraftDefinition({
   setDefinition,
   getProject,
   highlight,
+  colorParts = () => {},
   editCG,
   showSurfaces,
   onRegistered,
@@ -150,6 +161,7 @@ export function initAircraftDefinition({
     panel.hidden = true;
     document.body.classList.remove('defining-aircraft');
     highlight([]);
+    colorParts(null);
     editCG(null);
     showSurfaces([]);
   }
@@ -178,42 +190,79 @@ export function initAircraftDefinition({
     else if (tab === 'mass') mass();
     else aero();
     highlight(selected);
+    colorParts(tab === 'parts' ? d().parts.map(p => roleColors[p.role] ?? null) : null);
     showSurfaces(tab === 'aero' ? d().surfaces : []);
   }
   function parts() {
+    const all = d().parts,
+      counts = {};
+    for (const p of all) counts[p.role] = (counts[p.role] || 0) + 1;
+    const picked = new Set(selected.map(i => all[i].role));
+    const listed = ['unassigned', ...roleGroups.flatMap(([, roles]) => roles), 'control'].filter(r => counts[r]);
+    const chip = role =>
+      `<button type="button" class="role-chip" data-role="${role}" aria-pressed="${picked.size === 1 && picked.has(role)}" ${selected.length ? '' : 'disabled'}><span class="role-dot" style="background:${roleColors[role]}"></span>${roleLabels[role]}<small>${counts[role] || ''}</small></button>`;
     $('definition-content').innerHTML =
-      `<p>3D에서 부품을 클릭하세요. Shift를 누르면 여러 부품을 선택합니다.</p><label>부품 목록<select id="definition-parts" multiple size="8">${d()
-        .parts.map(
-          p =>
-            `<option value="${p.index}" ${selected.includes(p.index) ? 'selected' : ''}>${p.index + 1}. ${escape(p.name)} · ${roleLabels[p.role]}</option>`
-        )
-        .join(
-          ''
-        )}</select></label><div class="definition-inline"><label>선택 부품 역할<select id="definition-role">${Object.entries(
-        roleLabels
+      `<p class="hint">3D에서 부품을 클릭하거나 목록에서 고르세요. Shift·Ctrl로 여러 개를 선택합니다. 역할마다 3D 색이 바뀝니다.</p>
+    <div class="definition-inline"><button type="button" id="definition-suggest" ${counts.unassigned ? '' : 'disabled'}>이름으로 역할 제안</button><button type="button" id="definition-select-unassigned" ${counts.unassigned ? '' : 'disabled'}>미지정 ${counts.unassigned || 0}개 선택</button></div>
+    <label>부품 목록 · 역할별<select id="definition-parts" multiple size="10">${listed
+      .map(
+        role =>
+          `<optgroup label="${roleLabels[role]} · ${counts[role]}">${all
+            .filter(p => p.role === role)
+            .map(
+              p =>
+                `<option value="${p.index}" ${selected.includes(p.index) ? 'selected' : ''} title="${escape(p.name)}">${escape(p.name.split(' / ').at(-1))}</option>`
+            )
+            .join('')}</optgroup>`
       )
-        .map(([k, v]) => `<option value="${k}">${v}</option>`)
-        .join(
-          ''
-        )}</select></label><button type="button" id="definition-assign">역할 적용</button></div><label>부품 이름<input id="definition-part-name" value="${selected.length === 1 ? escape(d().parts[selected[0]].name) : ''}" ${selected.length !== 1 ? 'disabled' : ''}></label><p class="hint">공력 제외와 질량 제외는 다릅니다. 장비 질량도 질량·CG에서 포함하세요.</p><button type="button" id="definition-to-mass">질량·CG 입력</button>`;
+      .join('')}</select></label>
+    <fieldset class="role-picker"><legend>${selected.length ? `선택한 ${selected.length}개 부품의 역할` : '부품을 선택하면 역할을 지정할 수 있습니다'}</legend>${roleGroups
+      .map(
+        ([title, roles]) => `<div class="role-group"><span>${title}</span><div>${roles.map(chip).join('')}</div></div>`
+      )
+      .join(
+        ''
+      )}</fieldset><p class="hint">양력면과 조종면 역할은 공력 면에 연결해야 등록됩니다. 조종면은 고정면과 함께 한 공력 면에 넣고, 면의 조종면 종류를 같은 값으로 둡니다. 공력 제외와 질량 제외는 다릅니다.</p><label>부품 이름<input id="definition-part-name" value="${selected.length === 1 ? escape(all[selected[0]].name) : ''}" ${selected.length !== 1 ? 'disabled' : ''}></label><button type="button" id="definition-to-mass">질량·CG 입력</button>`;
     $('definition-parts').onchange = () => {
       selected = [...$('definition-parts').selectedOptions].map(o => Number(o.value));
       highlight(selected);
       parts();
+      $('definition-parts').focus();
     };
-    if (selected.length) $('definition-role').value = d().parts[selected[0]].role;
-    $('definition-assign').onclick = () => {
-      if (!selected.length) {
-        onError('부품을 먼저 선택하세요.');
-        return;
+    panel.querySelectorAll('.role-chip').forEach(
+      b =>
+        (b.onclick = () => {
+          for (const i of selected) all[i].role = b.dataset.role;
+          changed();
+          colorParts(all.map(p => roleColors[p.role] ?? null));
+          parts();
+        })
+    );
+    $('definition-suggest').onclick = () => {
+      let count = 0;
+      for (const p of all) {
+        const role = p.role === 'unassigned' ? suggestRole(p.name) : null;
+        if (role) {
+          p.role = role;
+          count++;
+        }
       }
-      for (const i of selected) d().parts[i].role = $('definition-role').value;
-      changed();
+      const left = all.filter(p => p.role === 'unassigned').length;
+      if (count) changed();
+      colorParts(all.map(p => roleColors[p.role] ?? null));
+      parts();
+      $('definition-status').textContent = count
+        ? `이름으로 ${count}개 부품의 역할을 채웠습니다. 추정값이므로 3D 색으로 확인하세요.${left ? ` 남은 미지정 ${left}개.` : ''}`
+        : '이름으로 알아볼 수 있는 부품이 없습니다. 직접 지정하세요.';
+    };
+    $('definition-select-unassigned').onclick = () => {
+      selected = all.filter(p => p.role === 'unassigned').map(p => p.index);
+      highlight(selected);
       parts();
     };
     $('definition-part-name').onchange = () => {
       if (selected.length === 1) {
-        d().parts[selected[0]].name = $('definition-part-name').value;
+        all[selected[0]].name = $('definition-part-name').value;
         changed();
         parts();
       }
@@ -298,6 +347,7 @@ export function initAircraftDefinition({
           $('definition-status').textContent = '부품별 관성을 평행축 정리로 합산했습니다.';
         });
   }
+  const addLabel = () => (selected.length ? `선택한 ${selected.length}개 부품으로 면 추가` : '부품을 선택해 면 추가');
   function aero() {
     surfaceIndex = Math.min(surfaceIndex, Math.max(0, d().surfaces.length - 1));
     $('definition-content').innerHTML =
@@ -305,32 +355,37 @@ export function initAircraftDefinition({
         .surfaces.map((s, i) => `<option value="${i}">${escape(s.name)}</option>`)
         .join(
           ''
-        )}</select></label><div class="definition-inline"><button type="button" id="definition-surface-add">선택 부품으로 면 추가</button><button type="button" id="definition-surface-remove">이 면 삭제</button></div><div id="definition-surface-editor"></div>
+        )}</select></label><div class="definition-inline"><button type="button" id="definition-surface-add">${addLabel()}</button><button type="button" id="definition-surface-remove">이 면 삭제</button></div><div id="definition-surface-editor"></div>
     <details open><summary>기준 치수·추진</summary><div class="definition-grid">${num('definition-area', '날개 면적', d().references.area_m2, 'm²')}${num('definition-chord', '평균 시위', d().references.chord_m, 'm')}${num('definition-span', '날개폭', d().references.span_m, 'm')}</div>${num('definition-cd', '추가 항력계수', d().physical.profile_cd)}${num('definition-thrust', '최대 추력', d().physical.max_thrust_N, 'N')}${xyz('definition-thrust-point', '추력 작용점', d().physical.thrust_point_m)}<label class="check"><input id="definition-flow5" type="checkbox" ${d().physical.flow5_closure_confirmed ? 'checked' : ''}>flow5의 종·횡 분리 근사 사용에 동의</label><p class="hint">flow5에서 출력하지 않는 종·횡 교차 회전율 미계수는 0으로 가정합니다. 큰 옆미끄럼·비대칭 조종 조건의 검증은 별도입니다. AVL 또는 복합 공력표의 회전율 출처가 AVL이면 이 동의가 필요하지 않습니다.</p></details>
     <details open><summary>확인·등록</summary><label>기체 이름<input id="definition-name" maxlength="100" value="${escape(d().name)}"></label><label>자료 구분<select id="definition-source-kind"><option value="assumption">가정값 포함</option><option value="design">설계값</option><option value="measured">측정값</option></select></label><label>형상·물성 출처와 가정<textarea id="definition-source" rows="3">${escape(d().source)}</textarea></label><button type="button" id="definition-preview">해석 입력 확인</button><p id="definition-preview-result" role="status"></p><label class="check"><input id="definition-reviewed" type="checkbox" ${d().reviewed ? 'checked' : ''}>단면·조종면·물성·좌표를 확인했습니다.</label><button type="button" id="definition-register" class="primary">해석 모델 등록</button><p class="hint">새 버전으로 등록하며 첫 공력표는 실제 AVL 또는 flow5로 계산합니다. 줄 물성·비행 조건은 해석 화면에서 확인하세요.</p></details>`;
     $('definition-surface').value = String(surfaceIndex);
     $('definition-surface').onchange = () => {
       surfaceIndex = Number($('definition-surface').value);
+      selected = [...d().surfaces[surfaceIndex].parts];
       surfaceEditor();
+      $('definition-surface-add').textContent = addLabel();
     };
     $('definition-surface-add').onclick = () => {
       if (!selected.length) {
         onError('부품 탭이나 3D에서 면에 포함할 부품을 선택하세요.');
         return;
       }
-      const axis = selected.some(i => d().parts[i].role === 'vertical_tail') ? 'z' : 'y';
+      const defaults = surfaceDefaults(d(), selected);
       d().surfaces.push({
-        name: `공력 면 ${d().surfaces.length + 1}`,
+        name: defaults.name || `공력 면 ${d().surfaces.length + 1}`,
         parts: [...selected],
-        axis,
+        axis: defaults.axis,
         mirror: false,
-        control: 'none',
+        control: defaults.control,
         hinge_fraction: 0.75,
         sections: []
       });
       surfaceIndex = d().surfaces.length - 1;
       changed();
       aero();
+      if (defaults.controlOnly)
+        $('definition-status').textContent =
+          '조종면 부품만 선택했습니다. 고정면 부품과 함께 넣어야 전체 시위 단면이 추출됩니다.';
     };
     $('definition-surface-remove').onclick = () => {
       if (!d().surfaces.length) return;
@@ -451,7 +506,6 @@ export function initAircraftDefinition({
       changed();
       sections();
     };
-    selected = [...s.parts];
     highlight(selected);
     sections();
   }
@@ -507,6 +561,7 @@ export function initAircraftDefinition({
       selected = add ? (selected.includes(index) ? selected.filter(i => i !== index) : [...selected, index]) : [index];
       highlight(selected);
       if (tab === 'parts') parts();
+      else if (tab === 'aero') $('definition-surface-add').textContent = addLabel();
     },
     refresh: () => {
       if (active) {

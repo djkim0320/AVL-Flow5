@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   newDefinition,
+  suggestRole,
+  surfaceDefaults,
   localFromWorld,
   worldFromLocal,
   onCenterline,
@@ -96,4 +98,53 @@ test('vertical section proposal runs root to tip with descending FRD Z', () => {
 });
 test('invalid DAT never becomes a substitute foil', () => {
   assert.throws(() => parseFoil('name\n1 0\n0 0\n1 0'));
+});
+
+test('part names suggest roles; structure words win over fin, wing and hatch', () => {
+  const cases = {
+    'S27.step / Aileron_R': 'aileron',
+    Elevator_L: 'elevator',
+    Rudder_R: 'rudder',
+    Horizontal_stabilizer: 'horizontal_tail',
+    Vertical_fin_L: 'vertical_tail',
+    Wing_L_outer: 'main_wing',
+    Pod_shell_L: 'fuselage',
+    Nose_gear: 'landing_gear',
+    Main_hub_1: 'landing_gear',
+    Cargo_hatch_R: 'door',
+    Sensor_fin_2: 'equipment',
+    Central_wing_saddle: 'equipment',
+    Hatch_latch_L_422: 'equipment',
+    Tail_boom_L: 'equipment',
+    '보조익 오른쪽': 'aileron',
+    Vertical_stabilizer: 'vertical_tail',
+    'asm.step / Vertical_stabiliser': 'vertical_tail',
+    VerticalStabilizer: 'vertical_tail',
+    main_wing_final: 'main_wing',
+    Wing_trailing_edge: 'main_wing',
+    Tripod_mount: 'equipment',
+    Spare_wing: 'main_wing',
+    '부품 7': null
+  };
+  for (const [name, role] of Object.entries(cases)) assert.equal(suggestRole(name), role, name);
+});
+
+test('a new surface takes its axis, control and name from the selected roles', () => {
+  const d = {
+    parts: ['main_wing', 'aileron', 'vertical_tail', 'rudder', 'elevator'].map((role, index) => ({ index, role }))
+  };
+  assert.deepEqual(surfaceDefaults(d, [0, 1]), {
+    axis: 'y',
+    control: 'aileron',
+    name: '주익 + 에일러론',
+    controlOnly: false
+  });
+  assert.deepEqual(surfaceDefaults(d, [2, 3]), {
+    axis: 'z',
+    control: 'rudder',
+    name: '수직 꼬리날개 + 방향타',
+    controlOnly: false
+  });
+  assert.equal(surfaceDefaults(d, [4]).controlOnly, true);
+  assert.equal(surfaceDefaults(d, [1, 4]).control, 'none');
 });

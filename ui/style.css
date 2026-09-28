@@ -666,6 +666,15 @@ body.defining-aircraft .inspector > :not(#aircraft-definition-panel) { display: 
 #aircraft-definition-panel input[type="checkbox"] { width: 15px; }
 #aircraft-definition-panel button { min-height: 34px; padding: 6px 10px; white-space: normal; }
 #aircraft-definition-panel fieldset { min-width: 0; margin: 12px 0; padding: 10px 12px 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); }
+#aircraft-definition-panel .role-picker legend { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.role-group { display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: start; margin-top: 8px; }
+.role-group > span { padding-top: 7px; font-size: 11px; color: var(--text-2); }
+.role-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
+#aircraft-definition-panel .role-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 10px; font-size: 12px; border-radius: 999px; }
+.role-chip small { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.role-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 25%, transparent); }
+#definition-parts optgroup { font-weight: 600; color: var(--text-2); }
+#definition-parts option { font-weight: 400; color: var(--text); }
 #aircraft-definition-panel fieldset legend { float: left; width: 100%; margin-bottom: 8px; font-size: 12px; font-weight: 650; color: var(--text); }
 #aircraft-definition-panel fieldset legend + * { clear: both; }
 #aircraft-definition-panel fieldset :is(input, select) { background: var(--surface); }

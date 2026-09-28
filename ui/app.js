@@ -94,6 +94,15 @@ function highlightParts(indices) {
   });
   render();
 }
+// Role colours while the definition panel shows the parts step; null restores each part's own colour.
+function colorParts(colors) {
+  objects.aircraft?.group.traverse(m => {
+    if (!m.isMesh || m.userData.part == null) return;
+    m.userData.baseColor ??= m.material.color.getHex();
+    m.material.color.set(colors?.[m.userData.part] ?? m.userData.baseColor);
+  });
+  render();
+}
 function componentRecord() {
   return selected === 'aircraft' ? objects.aircraft?.asset.components?.find(c => c.id === selectedComponent) : null;
 }
@@ -1259,6 +1268,7 @@ definitionUI = initAircraftDefinition({
   },
   getProject: () => project({ includeAnalysis: false }),
   highlight: highlightParts,
+  colorParts,
   editCG,
   showSurfaces: showAeroSurfaces,
   onSave: remember,

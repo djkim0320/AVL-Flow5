@@ -14,13 +14,19 @@ ROLES = {
     'main_wing',
     'horizontal_tail',
     'vertical_tail',
+    'aileron',
+    'elevator',
+    'rudder',
     'fuselage',
-    'control',
+    'landing_gear',
     'door',
     'equipment',
     'excluded',
+    # Pre-2026-09-29 definitions used one generic control role; it stays valid so their digests keep matching.
+    'control',
 }
 LIFTING = {'main_wing', 'horizontal_tail', 'vertical_tail'}
+CONTROL_ROLES = {'aileron': '에일러론', 'elevator': '승강타', 'rudder': '방향타'}
 
 
 def digest(value):
@@ -380,8 +386,16 @@ def export_aero(definition, aircraft):
     for p in definition['parts']:
         if p['role'] == 'unassigned':
             raise ValueError(p['name'] + ': 부품 역할을 지정하세요.')
-        if p['role'] in LIFTING | {'control'} and p['index'] not in described:
+        if p['role'] in LIFTING | {'control'} | set(CONTROL_ROLES) and p['index'] not in described:
             raise ValueError(p['name'] + ': 공력 면에 연결하세요.')
+        if p['role'] in CONTROL_ROLES:
+            label = CONTROL_ROLES[p['role']]
+            for surface in surfaces:
+                if p['index'] in surface.get('parts', []) and surface.get('control', 'none') != p['role']:
+                    raise ValueError(
+                        f"{p['name']}: {label} 부품이 연결된 공력 면 '{surface.get('name', '')}'의 조종면 종류를 "
+                        f'{label}(으)로 지정하세요.'
+                    )
     files.insert(0, dict(name='aircraft.avl', text='\n'.join(lines) + '\n'))
     controls = {
         k: control_order.index(k) + 1 if k in control_order else None for k in ('elevator', 'aileron', 'rudder')

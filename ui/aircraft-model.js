@@ -5,12 +5,82 @@ export const roleLabels = {
   main_wing: '주익',
   horizontal_tail: '수평 꼬리날개',
   vertical_tail: '수직 꼬리날개',
+  aileron: '에일러론',
+  elevator: '승강타',
+  rudder: '방향타',
   fuselage: '동체',
-  control: '조종면',
+  landing_gear: '착륙장치',
   door: '문',
   equipment: '장비·구조물',
-  excluded: '공력 제외'
+  excluded: '공력 제외',
+  // Older definitions: one generic control role. Kept readable, no longer offered.
+  control: '조종면 · 종류 미지정'
 };
+// Roles offered in the picker, in the order they are shown. Lifting and control roles must be in a surface.
+export const roleGroups = [
+  ['양력면', ['main_wing', 'horizontal_tail', 'vertical_tail']],
+  ['조종면', ['aileron', 'elevator', 'rudder']],
+  ['기타', ['fuselage', 'landing_gear', 'door', 'equipment', 'excluded']]
+];
+export const controlRoles = ['aileron', 'elevator', 'rudder'];
+export const roleColors = {
+  main_wing: '#4c8dff',
+  horizontal_tail: '#2fb5a3',
+  vertical_tail: '#8b7cf6',
+  aileron: '#ff8a3d',
+  elevator: '#f2b13b',
+  rudder: '#ef5f7a',
+  fuselage: '#a7b1bc',
+  landing_gear: '#5d6975',
+  door: '#c28e5c',
+  equipment: '#7f9468',
+  excluded: '#39414b',
+  control: '#ff8a3d'
+};
+// First match wins. Names are split into words (on _, -, spaces, digits and camelCase) and English keywords match
+// only at a word start, so "final" is not a fin and "trailing" is not a rail. Structure/equipment words come first
+// so Sensor_fin, Hatch_latch or Central_wing_saddle are not read as a fin, door or wing; control surfaces precede
+// their parent surfaces, and an explicit vertical word precedes the generic stabilizer rule.
+const ROLE_PATTERNS = [
+  [
+    'equipment',
+    /\b(latch|hinge|frame|rail|mount|plug|switch|saddle|guide|restraint|divider|floor|envelope|firewall|sensor|winch|batter|motor|servo|receiver|container|prop|boom|strut|spar\b|spars\b)|배터리|모터|윈치|서보|센서|프로펠러/
+  ],
+  ['aileron', /\b(aileron|flaperon)|에일러론|보조익/],
+  ['elevator', /\belevator|승강타/],
+  ['rudder', /\brudder|방향타/],
+  ['door', /\b(door|hatch)|문|해치/],
+  ['landing_gear', /\b(gear|wheel|hub|tire|tyre|skid)|바퀴|착륙/],
+  ['vertical_tail', /\b(vertical|v ?tail|fins?\b)|수직/],
+  ['horizontal_tail', /\b(horizontal|h ?tail|tailplane|stabili[sz]er|stabilator)|수평/],
+  ['main_wing', /wing|주익|날개/],
+  ['fuselage', /\b(fuselage|pod\b|pods\b|body|nose|spinner|shell|cowl|canopy)|동체/]
+];
+export function suggestRole(name) {
+  const text = String(name || '')
+    .split(' / ')
+    .at(-1)
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .replace(/[\s_\-.0-9]+/g, ' ');
+  return ROLE_PATTERNS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+}
+// Defaults for a new aerodynamic surface built from the selected parts.
+export function surfaceDefaults(definition, indices) {
+  const roles = new Set(indices.map(i => definition.parts[i].role));
+  const controls = controlRoles.filter(r => roles.has(r));
+  const lifting = ['main_wing', 'horizontal_tail', 'vertical_tail'].find(r => roles.has(r));
+  const control = controls.length === 1 ? controls[0] : 'none';
+  return {
+    axis: roles.has('vertical_tail') || roles.has('rudder') ? 'z' : 'y',
+    control,
+    name: [lifting, control === 'none' ? null : control]
+      .filter(Boolean)
+      .map(r => roleLabels[r])
+      .join(' + '),
+    controlOnly: controls.length > 0 && !lifting
+  };
+}
 export const blankTensor = () => [
   [null, 0, 0],
   [0, null, 0],
