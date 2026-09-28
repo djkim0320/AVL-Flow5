@@ -922,6 +922,7 @@ async function applyProject(value) {
   view();
   if (legacy) status(value.migration_note);
 }
+const PREVIOUS_SESSION = 'previous-session';
 function queueDraft() {
   clearTimeout(savingTimer);
   $('save-state').textContent = '배치 변경됨';
@@ -952,6 +953,15 @@ function queueDraft() {
 }
 
 $('empty-load').onclick = () => $('load-aircraft').click();
+$('empty-restore').onclick = () =>
+  task(async () => {
+    const previous = await loadDraft(draftDB, PREVIOUS_SESSION);
+    if (!previous) throw new Error('이전 작업이 없습니다.');
+    if (previous.schema === 'dbf-assembly/1') await saveDraft(draftDB, previous, 'legacy-draft-before-point-mass');
+    await applyProject(previous);
+    $('empty-restore').hidden = true;
+    if (previous.schema !== 'dbf-assembly/1') status('이 브라우저에 저장한 이전 작업을 열었습니다.');
+  }, '이전 작업을 여는 중…');
 $('add-winch').onclick = () => task(addWinch, '윈치를 추가하는 중…');
 $('load-aircraft').onclick = () => {
   pendingRole = 'append';
@@ -1294,17 +1304,21 @@ syncThemeButton();
 undoStack = [snapshot()];
 refresh();
 render();
+// The editor opens empty. The last non-empty autosave is kept under its own key before this session's
+// autosaves overwrite 'draft', and the empty screen offers it back.
 try {
   draftDB = await openDraftDB();
-  const previous = await loadDraft(draftDB);
-  if (previous)
-    try {
-      if (previous.schema === 'dbf-assembly/1') await saveDraft(draftDB, previous, 'legacy-draft-before-point-mass');
-      await applyProject(previous);
-      if (previous.schema !== 'dbf-assembly/1') status('이 브라우저에 저장한 질점 배치를 복원했습니다.');
-    } catch (e) {
-      error('이전 자동 저장을 열지 못했습니다: ' + e.message);
-    }
+  const last = await loadDraft(draftDB);
+  if (last && Object.values(last.objects || {}).some(Boolean)) await saveDraft(draftDB, last, PREVIOUS_SESSION);
+  const previous = await loadDraft(draftDB, PREVIOUS_SESSION);
+  if (previous) {
+    const name = previous.objects?.aircraft?.source?.name,
+      saved = Date.parse(previous.saved_at);
+    $('empty-restore').hidden = false;
+    $('empty-restore').title = [name, Number.isFinite(saved) ? new Date(saved).toLocaleString() : '']
+      .filter(Boolean)
+      .join(' · ');
+  }
 } catch (e) {
   $('save-state').textContent = '파일 저장 사용';
 }
